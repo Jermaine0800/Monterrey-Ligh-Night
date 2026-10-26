@@ -10,7 +10,8 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (Gamepad.current == null) return;
 
-        if (Gamepad.current.buttonSouth.wasPressedThisFrame)
+        // Cambiado a Gamepad.current.rightShoulder (Botón RB)
+        if (Gamepad.current.rightShoulder.wasPressedThisFrame)
         {
             Intentar();
         }

@@ -9,6 +9,7 @@ public class InventoryUI : MonoBehaviour
     public bool hasBackPack = false;
 
     private Image[] iconos;
+    private int slotSeleccionado = 0; // Para saber qué casilla estamos seleccionando
 
     void Start()
     {
@@ -67,13 +68,41 @@ public class InventoryUI : MonoBehaviour
 
     void Update()
     {
-        if (!hasBackPack || Gamepad.current == null) return;
+        if (Gamepad.current == null) return;
 
-        // Botón Y (North Button) del control de Xbox para abrir/cerrar inventario
+        // Abrir / Cerrar inventario con Botón Y (North) solo si tiene mochila
         if (Gamepad.current.buttonNorth.wasPressedThisFrame)
         {
-            if (inventoryPanel != null)
-                inventoryPanel.SetActive(!inventoryPanel.activeSelf);
+            if (hasBackPack)
+            {
+                if (inventoryPanel != null)
+                {
+                    bool estadoActual = inventoryPanel.activeSelf;
+                    inventoryPanel.SetActive(!estadoActual);
+                }
+            }
+            else
+            {
+                Debug.Log("No tienes la mochila, no puedes abrir el inventario.");
+            }
+        }
+
+        // Si el inventario está abierto, usamos LB y RB para movernos entre casillas
+        if (inventoryPanel != null && inventoryPanel.activeSelf)
+        {
+            if (Gamepad.current.leftShoulder.wasPressedThisFrame)
+            {
+                slotSeleccionado--;
+                if (slotSeleccionado < 0) slotSeleccionado = iconos.Length - 1;
+                ActualizarSeleccionVisual();
+            }
+
+            if (Gamepad.current.rightShoulder.wasPressedThisFrame)
+            {
+                slotSeleccionado++;
+                if (slotSeleccionado >= iconos.Length) slotSeleccionado = 0;
+                ActualizarSeleccionVisual();
+            }
         }
     }
 
@@ -93,5 +122,10 @@ public class InventoryUI : MonoBehaviour
                 iconos[i].enabled = false;
             }
         }
+    }
+
+    void ActualizarSeleccionVisual()
+    {
+        Debug.Log("Casilla seleccionada en inventario: " + slotSeleccionado);
     }
 }
