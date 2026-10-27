@@ -106,16 +106,27 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
+
     void Refrescar()
     {
+        // Validación de seguridad para evitar NullReferenceException
         if (iconos == null || inventario == null) return;
 
         for (int i = 0; i < iconos.Length; i++)
         {
-            if (i < inventario.objetos.Count)
+            if (iconos[i] == null) continue; // Si una casilla no tiene imagen asignada, la salta
+
+            if (i < inventario.objetos.Count && inventario.objetos[i] != null)
             {
-                iconos[i].sprite = inventario.objetos[i].icono;
-                iconos[i].enabled = true;
+                if (inventario.objetos[i].icono != null)
+                {
+                    iconos[i].sprite = inventario.objetos[i].icono;
+                    iconos[i].enabled = true;
+                }
+                else
+                {
+                    iconos[i].enabled = false;
+                }
             }
             else
             {
@@ -123,6 +134,8 @@ public class InventoryUI : MonoBehaviour
             }
         }
     }
+
+
 
     void ActualizarSeleccionVisual()
     {
