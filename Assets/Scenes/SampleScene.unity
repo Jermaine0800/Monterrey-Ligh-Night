@@ -1311,10 +1311,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 729273447}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ae8ad3f2da064a44b4dd2627e7bddb9, type: 3}
+  m_Script: {fileID: 11500000, guid: 674ddeb75eb35c14faf325157868bec8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
-  item: {fileID: 11400000, guid: a5612c067c97b0d4483ddc2fcc5919d6, type: 2}
+  m_EditorClassIdentifier: Assembly-CSharp::FlashlightItem
+  item: {fileID: 0}
   esObjetoMano: 1
 --- !u!1 &755362278
 GameObject:
