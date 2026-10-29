@@ -13,9 +13,15 @@ public abstract class InteractableItem : MonoBehaviour, IInteractable
         InventoryUI ui = FindFirstObjectByType<InventoryUI>();
         PlayerInventory inventario = FindFirstObjectByType<PlayerInventory>();
 
-        if (ui == null || inventario == null) return;
+        // Validación de seguridad para que no se congele si falta algún componente
+        if (inventario == null)
+        {
+            Debug.LogError("¡Falta el componente PlayerInventory en la escena!");
+            return;
+        }
 
-        if (!esObjetoMano && !ui.hasBackPack)
+        // Si requiere mochila y la UI existe pero no la tiene
+        if (!esObjetoMano && ui != null && !ui.hasBackPack)
         {
             Debug.Log("Necesitas una mochila para recoger esto.");
             return;
@@ -24,7 +30,7 @@ public abstract class InteractableItem : MonoBehaviour, IInteractable
         if (inventario.Agregar(item))
         {
             yaFueRecogido = true;
-            Debug.Log("Recogiste: " + item.nombre);
+            Debug.Log("Recogiste: " + (item != null ? item.nombre : "Objeto"));
             OnPickedUp(jugador);
         }
         else
@@ -33,9 +39,8 @@ public abstract class InteractableItem : MonoBehaviour, IInteractable
         }
     }
 
-    // Método virtual para que cada objeto hijo decida qué hacer al ser recogido (herencia)
     protected virtual void OnPickedUp(PlayerInteraction jugador)
     {
-        Destroy(gameObject); // Por defecto se destruye del suelo
+        Destroy(gameObject);
     }
 }
