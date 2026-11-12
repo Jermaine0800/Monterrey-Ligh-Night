@@ -33,6 +33,13 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
+        // Inventario o pausa abiertos: el personaje se queda quieto
+        if (!HorrorGameState.PuedeJugar)
+        {
+            animator.SetFloat("Speed", 0f);
+            return;
+        }
+
         // Detectar si estamos tocando el suelo
         if (controller.isGrounded && velocidadVertical < 0)
         {

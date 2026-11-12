@@ -9,6 +9,7 @@ public class PlayerInteraction : MonoBehaviour
     void Update()
     {
         if (Gamepad.current == null) return;
+        if (!HorrorGameState.PuedeJugar) return; // no interactuar con inventario/pausa abiertos
 
         // Cambiado a Gamepad.current.rightShoulder (Botón RB)
         if (Gamepad.current.rightShoulder.wasPressedThisFrame)
