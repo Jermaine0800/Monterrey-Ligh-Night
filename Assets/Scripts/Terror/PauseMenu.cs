@@ -50,13 +50,14 @@ public class PauseMenu : MonoBehaviour
         HorrorUI.Estirar(HorrorUI.Rect(grupoComandos));
         string[] filas =
         {
-            "[STICK IZQ]   Caminar",
-            "[STICK DER]   Cámara",
-            "[RB]          Interactuar / recoger",
+            "[STICK IZQ]   Caminar   ·  [L3/LB] Correr",
+            "[STICK DER]   Cámara    ·  [R3] 1ª / 3ª persona",
+            "[RB]          Interactuar / esconderse",
+            "[RT]          Golpear",
+            "[B]           Agacharse",
             "[Y]           Maletín",
             "[X]           Linterna",
             "[START]       Pausa",
-            "[B]           Atrás",
         };
         for (int i = 0; i < filas.Length; i++)
         {

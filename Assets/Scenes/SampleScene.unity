@@ -206,6 +206,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 00a9f47af3c06b540bb146c742ff4bf7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 47258489}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 00a9f47af3c06b540bb146c742ff4bf7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 47258493}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 00a9f47af3c06b540bb146c742ff4bf7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 47258492}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 00a9f47af3c06b540bb146c742ff4bf7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 47258491}
   m_SourcePrefab: {fileID: 100100000, guid: 00a9f47af3c06b540bb146c742ff4bf7, type: 3}
 --- !u!1 &47258482 stripped
 GameObject:
@@ -229,9 +238,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49dbebd6bfe1e7e40ad7662e21b21cd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  speed: 5
+  velocidadCaminar: 2.4
+  velocidadCorrer: 5.2
+  velocidadAgachado: 1.2
   gravity: -20
   velocidadGiro: 10
+  aguanteMaximo: 6
+  recuperacion: 1.5
+  alturaDePie: 1.8
+  alturaAgachado: 1.1
   camara: {fileID: 0}
 --- !u!143 &47258485
 CharacterController:
@@ -340,6 +355,51 @@ MonoBehaviour:
   rango: 25
   anguloSpot: 55
   color: {r: 1, g: 0.93, b: 0.8, a: 1}
+--- !u!114 &47258491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 47258482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37ea5c4797c092d4dbdf79167f982031, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEscondite
+--- !u!114 &47258492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 47258482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c349c6eb4b1c624d8e2374501b0a8fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCombate
+  danio: 34
+  alcance: 1.3
+  radio: 0.7
+  enfriamiento: 0.75
+  retrasoImpacto: 0.25
+--- !u!114 &47258493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 47258482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe98b087208349548b6ecaabd90b1b85, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaludJugador
+  vidaMaxima: 100
+  invulnerableTrasGolpe: 0.4
+  regeneracionPorSegundo: 2
+  esperaParaRegenerar: 6
 --- !u!1 &234033882
 GameObject:
   m_ObjectHideFlags: 0
@@ -938,6 +998,13 @@ MonoBehaviour:
   sensibilidad: 120
   minVertical: -30
   maxVertical: 60
+  alturaOjos: 1.62
+  alturaOjosAgachado: 1
+  adelanteOjos: 0.12
+  radioColision: 0.25
+  capasColision:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1182,9 +1249,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49dbebd6bfe1e7e40ad7662e21b21cd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  speed: 5
+  velocidadCaminar: 2.4
+  velocidadCorrer: 5.2
+  velocidadAgachado: 1.2
   gravity: -20
   velocidadGiro: 10
+  aguanteMaximo: 6
+  recuperacion: 1.5
+  alturaDePie: 1.8
+  alturaAgachado: 1.1
   camara: {fileID: 0}
 --- !u!1001 &491958656
 PrefabInstance:

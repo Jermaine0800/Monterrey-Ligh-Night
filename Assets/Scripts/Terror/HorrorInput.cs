@@ -58,6 +58,49 @@ public static class HorrorInput
     public static bool LB => (Gamepad.current != null && Gamepad.current.leftShoulder.wasPressedThisFrame) || Tecla(Key.Q, Key.PageUp);
     public static bool RB => (Gamepad.current != null && Gamepad.current.rightShoulder.wasPressedThisFrame) || Tecla(Key.E, Key.PageDown);
 
+    // ---------------- Jugador ----------------
+
+    /// <summary>Stick izquierdo o WASD/flechas.</summary>
+    public static Vector2 Movimiento
+    {
+        get
+        {
+            Vector2 v = Gamepad.current != null ? Gamepad.current.leftStick.ReadValue() : Vector2.zero;
+            var kb = Keyboard.current;
+            if (kb != null)
+            {
+                if (kb.wKey.isPressed || kb.upArrowKey.isPressed) v.y += 1;
+                if (kb.sKey.isPressed || kb.downArrowKey.isPressed) v.y -= 1;
+                if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) v.x += 1;
+                if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) v.x -= 1;
+            }
+            return Vector2.ClampMagnitude(v, 1f);
+        }
+    }
+
+    /// <summary>Stick derecho (o mouse).</summary>
+    public static Vector2 Mirar
+    {
+        get
+        {
+            Vector2 v = Gamepad.current != null ? Gamepad.current.rightStick.ReadValue() : Vector2.zero;
+            if (Mouse.current != null) v += Mouse.current.delta.ReadValue() * 0.05f;
+            return v;
+        }
+    }
+
+    /// <summary>Correr: mantener LB o Shift. L3 lo alterna.</summary>
+    public static bool CorrerMantenido => (Gamepad.current != null && Gamepad.current.leftShoulder.isPressed) ||
+                                          (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed);
+    public static bool CorrerAlternar => Gamepad.current != null && Gamepad.current.leftStickButton.wasPressedThisFrame;
+    /// <summary>Agacharse: B o C.</summary>
+    public static bool Agacharse => (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame) || Tecla(Key.C, Key.LeftCtrl);
+    /// <summary>Golpear: RT o clic izquierdo.</summary>
+    public static bool Golpe => (Gamepad.current != null && Gamepad.current.rightTrigger.wasPressedThisFrame) ||
+                                (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
+    /// <summary>Cambiar primera / tercera persona: R3 o V.</summary>
+    public static bool CambiarCamara => (Gamepad.current != null && Gamepad.current.rightStickButton.wasPressedThisFrame) || Tecla(Key.V, Key.V);
+
     /// <summary>Texto del estado del control (para el menú).</summary>
     public static string EstadoControl()
     {

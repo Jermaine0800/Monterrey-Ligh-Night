@@ -8,11 +8,12 @@ public class PlayerInteraction : MonoBehaviour
 
     void Update()
     {
-        if (Gamepad.current == null) return;
         if (!HorrorGameState.PuedeJugar) return; // no interactuar con inventario/pausa abiertos
+        PlayerEscondite esc = GetComponent<PlayerEscondite>();
+        if (esc != null && (esc.Escondido || Time.time - esc.UltimaSalida < 0.5f)) return;
 
         // Cambiado a Gamepad.current.rightShoulder (Botón RB)
-        if (Gamepad.current.rightShoulder.wasPressedThisFrame)
+        if (HorrorInput.RB)
         {
             Intentar();
         }

@@ -165,15 +165,15 @@ public class MainMenuController : MonoBehaviour
         // (botón, color Xbox apagado, acción)
         var filas = new (string boton, Color color, string accion)[]
         {
-            ("L",     HorrorUI.Hueso,                       "Stick izquierdo  —  caminar"),
-            ("R",     HorrorUI.Hueso,                       "Stick derecho  —  mover la cámara"),
-            ("RB",    HorrorUI.Hueso,                       "Interactuar  /  recoger objetos"),
-            ("Y",     new Color(0.85f, 0.7f, 0.2f),         "Abrir el maletín (necesitas la mochila)"),
-            ("X",     new Color(0.25f, 0.45f, 0.85f),       "Encender / apagar la linterna"),
-            ("A",     new Color(0.3f, 0.7f, 0.3f),          "Aceptar"),
-            ("B",     new Color(0.75f, 0.2f, 0.2f),         "Atrás  /  cerrar maletín"),
-            ("☰",     HorrorUI.Hueso,                       "START  —  pausa"),
-            ("+",     HorrorUI.Hueso,                       "Cruceta  —  moverse dentro del maletín"),
+            ("L",  HorrorUI.Hueso,                 "Stick izquierdo — caminar      ·  L3 / LB — correr"),
+            ("R",  HorrorUI.Hueso,                 "Stick derecho — cámara         ·  R3 — 1ª / 3ª persona"),
+            ("RB", HorrorUI.Hueso,                 "Interactuar  /  recoger  /  esconderse"),
+            ("RT", HorrorUI.Hueso,                 "Golpear"),
+            ("B",  new Color(0.75f, 0.2f, 0.2f),   "Agacharse  /  atrás"),
+            ("Y",  new Color(0.85f, 0.7f, 0.2f),   "Maletín (necesitas la mochila)"),
+            ("X",  new Color(0.25f, 0.45f, 0.85f), "Linterna"),
+            ("A",  new Color(0.3f, 0.7f, 0.3f),    "Aceptar  /  avanzar diálogo"),
+            ("☰",  HorrorUI.Hueso,                 "START — pausa"),
         };
 
         for (int i = 0; i < filas.Length; i++)
