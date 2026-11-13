@@ -37,6 +37,7 @@ public class GuiaController : MonoBehaviour
     };
 
     public bool Visible { get; private set; }
+    [HideInInspector] public bool congelarGiro;   // la historia lo usa para que señale sin voltear hacia ti
     public Pose PoseActual { get; private set; }
 
     Transform jugador;
@@ -176,7 +177,7 @@ public class GuiaController : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(d), velocidadGiro * Time.deltaTime);
             }
         }
-        else if (PoseActual != Pose.Sentado)
+        else if (PoseActual != Pose.Sentado && !congelarGiro)
         {
             // Siempre te está mirando
             Vector3 d = jugador.position - transform.position; d.y = 0;

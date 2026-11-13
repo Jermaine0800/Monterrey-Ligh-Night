@@ -37,6 +37,41 @@ public class CameraController : MonoBehaviour
 
     public void Enfocar(Transform t) { enfoque = t; }
 
+    /// <summary>
+    /// Algunos modelos importados traen su propia cámara (p. ej. "PS2_Cam" dentro del guía)
+    /// y le ganan a la del jugador. Aquí apagamos cualquier otra cámara que dibuje a pantalla.
+    /// </summary>
+    void AsegurarCamaraUnica(Camera mia)
+    {
+        if (mia == null) return;
+        mia.tag = "MainCamera";
+        mia.enabled = true;
+        foreach (Camera c in FindObjectsByType<Camera>(FindObjectsInactive.Exclude))
+        {
+            if (c == mia || c.targetTexture != null || c.transform.IsChildOf(transform)) continue;
+            c.enabled = false;
+            if (c.CompareTag("MainCamera")) c.tag = "Untagged";
+            Debug.Log("[Cámara] Apagué la cámara extra: " + c.name);
+        }
+        // Luz de la videocámara: un relleno tenue para que el senderista no sea una mancha negra
+        if (mia.transform.Find("LuzVideocamara") == null)
+        {
+            GameObject g = new GameObject("LuzVideocamara");
+            g.transform.SetParent(mia.transform, false);
+            Light l = g.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.range = 7f;
+            l.intensity = 0.9f;
+            l.color = new Color(0.85f, 0.88f, 1f);
+            l.shadows = LightShadows.None;
+        }
+
+        AudioListener oido = mia.GetComponent<AudioListener>();
+        if (oido == null) oido = mia.gameObject.AddComponent<AudioListener>();
+        foreach (AudioListener a in FindObjectsByType<AudioListener>(FindObjectsInactive.Exclude))
+            if (a != oido) a.enabled = false;
+    }
+
     void Start()
     {
         if (objetivo != null)
@@ -54,6 +89,7 @@ public class CameraController : MonoBehaviour
             hija.transform.localRotation = Quaternion.identity;
             hija.nearClipPlane = 0.05f;
         }
+        AsegurarCamaraUnica(hija != null ? hija : GetComponent<Camera>());
         sensibilidad = PlayerPrefs.GetFloat("sensibilidad", sensibilidad); // desde Opciones del menú
         primeraPersona = PlayerPrefs.GetInt("primera_persona", 0) == 1;
         distanciaActual = distancia;
