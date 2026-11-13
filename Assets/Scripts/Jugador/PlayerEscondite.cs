@@ -76,7 +76,7 @@ public class PlayerEscondite : MonoBehaviour
 
     void AnimarEscondido(bool v)
     {
-        Animator a = GetComponent<Animator>();
+        Animator a = GetComponentInChildren<Animator>();
         if (a == null || a.runtimeAnimatorController == null) return;
         foreach (AnimatorControllerParameter p in a.parameters)
         {

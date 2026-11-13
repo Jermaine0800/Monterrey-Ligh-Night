@@ -89,6 +89,10 @@ public class SaludJugador : Entidad
     protected override void AlRecibirDanio(float cantidad, Vector3 origen)
     {
         ultimoDanio = Time.time;
+        Animator a = GetComponentInChildren<Animator>();
+        if (a != null && a.runtimeAnimatorController != null)
+            foreach (AnimatorControllerParameter p in a.parameters)
+                if (p.name == "Golpeado") { a.SetTrigger("Golpeado"); break; }
         src.PlayOneShot(golpe, 0.9f);
         VHSOverlay.Glitch(0.7f, 0.35f);
         HorrorInput.Vibrar(0.9f, 0.7f, 0.35f, this);

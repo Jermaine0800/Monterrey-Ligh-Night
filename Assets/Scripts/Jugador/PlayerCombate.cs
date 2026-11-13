@@ -24,7 +24,7 @@ public class PlayerCombate : MonoBehaviour
 
     void Start()
     {
-        animator = GetComponent<Animator>();
+        animator = GetComponentInChildren<Animator>();
         movimiento = GetComponent<PlayerMovement>();
         src = gameObject.AddComponent<AudioSource>();
         src.spatialBlend = 0.5f;
@@ -35,7 +35,7 @@ public class PlayerCombate : MonoBehaviour
 
     public void RevisarParametros()
     {
-        if (animator == null) animator = GetComponent<Animator>();
+        if (animator == null) animator = GetComponentInChildren<Animator>();
         tieneTrigger = false;
         if (animator == null || animator.runtimeAnimatorController == null) return;
         foreach (AnimatorControllerParameter p in animator.parameters)

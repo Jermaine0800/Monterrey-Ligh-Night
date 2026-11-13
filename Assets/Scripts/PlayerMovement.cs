@@ -45,7 +45,7 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
+        animator = GetComponentInChildren<Animator>();
         aguante = aguanteMaximo;
         centroOriginalY = controller.center.y;
         alturaDePie = controller.height;
@@ -58,7 +58,7 @@ public class PlayerMovement : MonoBehaviour
     /// <summary>Se llama al cambiar el Animator Controller (por ejemplo al cambiar de personaje).</summary>
     public void RevisarParametros()
     {
-        if (animator == null) animator = GetComponent<Animator>();
+        if (animator == null) animator = GetComponentInChildren<Animator>();
         tieneSpeed = tieneAgachado = false;
         if (animator == null || animator.runtimeAnimatorController == null) return;
         foreach (AnimatorControllerParameter p in animator.parameters)
