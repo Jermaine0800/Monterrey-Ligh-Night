@@ -251,4 +251,60 @@ public static class ProceduralAudio
         }
         return Crear("Voz", Normalizar(d, 0.5f));
     }
+
+    /// <summary>Grito distorsionado para los sustos (screamer).</summary>
+    public static AudioClip Grito(int semilla)
+    {
+        System.Random r = new System.Random(semilla);
+        int n = (int)(Hz * 1.4f);
+        float[] d = new float[n];
+        float fase = 0, fase2 = 0, lp = 0;
+        for (int i = 0; i < n; i++)
+        {
+            float t = i / (float)n;
+            float f = 520f + 700f * Mathf.Sin(t * 3f) + (float)(r.NextDouble() - 0.5) * 200f;
+            fase += 2 * Mathf.PI * f / Hz;
+            fase2 += 2 * Mathf.PI * (f * 1.49f) / Hz;
+            float fm = Mathf.Sin(fase + 3f * Mathf.Sin(fase2));
+            float ruido = (float)(r.NextDouble() * 2 - 1);
+            lp += (ruido - lp) * 0.4f;
+            float env = Mathf.Min(1f, t * 40f) * (1f - t * 0.6f);
+            float s = fm * 0.7f + lp * 0.6f;
+            d[i] = Mathf.Clamp(s * 1.8f, -1f, 1f) * env; // saturado
+        }
+        return Crear("Grito", Normalizar(d, 0.95f));
+    }
+
+    /// <summary>Rama que truena (pisada de algo detrás de ti).</summary>
+    public static AudioClip Rama(int semilla)
+    {
+        System.Random r = new System.Random(semilla);
+        int n = (int)(Hz * 0.35f);
+        float[] d = new float[n];
+        for (int k = 0; k < 3 + r.Next(3); k++)
+        {
+            int ini = r.Next(n / 2);
+            for (int i = 0; i < Hz * 0.03f && ini + i < n; i++)
+                d[ini + i] += (float)(r.NextDouble() * 2 - 1) * Mathf.Exp(-i / (Hz * 0.006f));
+        }
+        return Crear("Rama", Normalizar(d, 0.8f));
+    }
+
+    /// <summary>Respiración pesada cerca.</summary>
+    public static AudioClip Respiracion(int semilla)
+    {
+        System.Random r = new System.Random(semilla);
+        int n = Hz * 3;
+        float[] d = new float[n];
+        float lp = 0, lp2 = 0;
+        for (int i = 0; i < n; i++)
+        {
+            float t = i / (float)Hz;
+            float b = (float)(r.NextDouble() * 2 - 1);
+            lp += (b - lp) * 0.08f; lp2 += (lp - lp2) * 0.08f;
+            float ciclo = Mathf.Max(0f, Mathf.Sin(t * Mathf.PI / 1.5f * 2f));
+            d[i] = (lp - lp2) * 6f * ciclo * ciclo;
+        }
+        return Crear("Respiracion", Normalizar(d, 0.6f));
+    }
 }
