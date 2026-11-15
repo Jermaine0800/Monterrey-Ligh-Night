@@ -1,0 +1,11 @@
+LICENSE - Hearthlane game assets
+
+You may:
+  - Use these assets in unlimited personal and commercial projects (games, videos, renders, apps).
+  - Modify them however you like.
+
+You may not:
+  - Resell or redistribute the asset files themselves, as they are or modified, on their own or
+    as part of another asset pack, template or library.
+
+Credit is appreciated but not required: "Assets by Hearthlane" (hearthlanecreators.itch.io)
