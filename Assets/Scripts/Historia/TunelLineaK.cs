@@ -17,6 +17,7 @@ public class TunelLineaK : MonoBehaviour
     public Transform interior;
     public Transform monitor;
     public Casillero casillero;
+    public Transform puertaSalida;
     public Light[] luces;
     public GameObject silueta;          // la figura de cabeza radial al fondo de las vías
 

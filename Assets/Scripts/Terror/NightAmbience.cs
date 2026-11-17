@@ -17,6 +17,16 @@ public class NightAmbience : MonoBehaviour
     public Color neblinaColor = new Color(0.025f, 0.027f, 0.035f);
     [Range(0, 0.2f)] public float neblina = 0.045f;
 
+    [Header("Brillo general")]
+    [Tooltip("Exposición extra de la cámara (post-proceso). 0 = sin cambio, 1 = el doble de luz.")]
+    [Range(-1, 3)] public float exposicion = 0.9f;
+    [Tooltip("Tamaño del tramado PSX (cuadritos). El original de VNTG (0.2) se ve como tablero de ajedrez de noche.")]
+    [Range(0, 1)] public float tramadoPSX = 0f;
+    [Tooltip("Qué tan fuerte se ven los filtros CRT/VHS (1 = como venían, 0.5 = a la mitad)")]
+    [Range(0, 1)] public float intensidadFiltros = 0.5f;
+    [Tooltip("Resolución vertical del efecto PSX (pixeleado). 240 = PS1, 360 = más nítido.")]
+    public float resolucionPSX = 360f;
+
     [Header("Extras")]
     [Tooltip("Quita el skybox de día y pone fondo del color de la neblina")]
     public bool quitarCielo = true;
@@ -64,6 +74,59 @@ public class NightAmbience : MonoBehaviour
 
         if (quitarLightmapsDeDia) LightmapSettings.lightmaps = new LightmapData[0];
 
+        // Exposición: se suma al perfil del Global Volume (copia en tiempo de ejecución, no toca el asset)
+        foreach (UnityEngine.Rendering.Volume v in FindObjectsByType<UnityEngine.Rendering.Volume>(FindObjectsInactive.Exclude))
+        {
+            if (!v.isGlobal || v.profile == null) continue;
+            UnityEngine.Rendering.VolumeProfile perfil = v.profile;   // instancia propia en Play
+            if (!perfil.TryGet(out UnityEngine.Rendering.Universal.ColorAdjustments ca))
+                ca = perfil.Add<UnityEngine.Rendering.Universal.ColorAdjustments>(true);
+            ca.postExposure.overrideState = true;
+            ca.postExposure.value = exposicion + Mathf.Log(Mathf.Max(0.1f, brillo), 2f);
+            break;
+        }
+
+        SuavizarTramado();
         DynamicGI.UpdateEnvironment();
+    }
+
+    /// <summary>
+    /// Ajusta el efecto PSX de VNTG. La escena no tenía override, así que usaba los valores por defecto
+    /// (256x256 de resolución y tramado grande = tablero de ajedrez). Aquí se agrega uno en tiempo de ejecución.
+    /// </summary>
+    void SuavizarTramado()
+    {
+        foreach (UnityEngine.Rendering.Volume v in FindObjectsByType<UnityEngine.Rendering.Volume>(FindObjectsInactive.Exclude))
+        {
+            if (!v.isGlobal || v.profile == null) continue;
+            UnityEngine.Rendering.VolumeProfile perfil = v.profile;
+            if (!perfil.TryGet(out ColbyO.VNTG.PSX.PSXEffectSettings psx))
+                psx = perfil.Add<ColbyO.VNTG.PSX.PSXEffectSettings>(false);
+            psx.active = true;
+            psx.Enabled.Override(true);
+            psx.PixelResolution.Override(new Vector2(resolucionPSX * 16f / 9f, resolucionPSX));
+            psx.ColorPrecision.Override(64f);
+            psx.EnableDither.Override(tramadoPSX > 0.001f);
+            psx.DitherScale.Override(tramadoPSX);
+            psx.AmbientColor.Override(ambienteNoche * 0.5f);
+
+            // Filtros CRT / VHS a la mitad (los valores del perfil se multiplican por intensidadFiltros)
+            if (perfil.TryGet(out ColbyO.VNTG.CRT.CRTSettings crt))
+            {
+                float k = intensidadFiltros;
+                crt.ScreenBend.Override(crt.ScreenBend.value * k);
+                crt.ScanLineStrength.Override(crt.ScanLineStrength.value * k);
+                crt.ScanLineHorizontalOpacity.Override(crt.ScanLineHorizontalOpacity.value * k);
+                crt.NoiseScale.Override(crt.NoiseScale.value * k);
+                crt.InterferenceAmplitude.Override(crt.InterferenceAmplitude.value * k);
+                crt.GlitchChance.Override(crt.GlitchChance.value * k);
+                crt.TrackingJitter.Override(crt.TrackingJitter.value * k);
+                crt.ChromaticOffset.Override(crt.ChromaticOffset.value * k);
+                crt.UnsharpAmount.Override(crt.UnsharpAmount.value * k);
+                crt.VignetteOpacity.Override(crt.VignetteOpacity.value * k);
+                if (k < 0.75f) crt.EnableSubPixels.Override(false);   // la rejilla de subpíxeles es lo que más "ensucia"
+            }
+            break;
+        }
     }
 }

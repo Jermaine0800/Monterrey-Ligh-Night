@@ -28,10 +28,11 @@ public class CapActoI : CapituloBase
         yield return new WaitForSeconds(2f);
         yield return h.EscenaVigia(h.JuntoAArbol(h.Jugador.position, 7f, 16f), GuiaController.Pose.Sentado, new[]
         {
-            "Sentado|Vaya, vaya. Despertaste. Tus amigos no tuvieron tanta suerte. Bueno, no sé. No los he contado.",
-            "Hablar|27 de noviembre de 1998. Sector La Pastora. Bonita fecha para perderse, ¿no crees?",
-            "Senalar|Soy el Vigía. Yo cuido este lado de la Silla. Tú nada más vas de paso. Eso espero.",
-            "Hablar|Esa mochila de por ahí era de uno de ellos. Ya no la va a necesitar. Tómala.",
+            "Sentado|Vaya, vaya. Despertaste. Otra vez. Ah, ¿no te acuerdas? Normal. Nadie se acuerda.",
+            "Hablar|27 de noviembre de 1998. Sector La Pastora. Esta noche se repite. Y se repite. Y se repite.",
+            "Senalar|Soy el Vigía. Yo cuido este lado de la Silla. Y tú estás atrapado en él.",
+            "Hablar|Para salir necesitas cinco llaves. Están regadas por el cerro: donde acamparon tus amigos, en el panteón, en un túnel que no existe, en la capilla y allá arriba.",
+            "Intimidar|Si te mueres, vuelves a empezar la noche. Las llaves se quedan contigo. Tu cordura... eso ya no sé.",
             "Reir|Y si alguien te saluda entre los árboles... no le regreses el saludo. Es de mala educación. Para ti.",
         });
 
@@ -54,7 +55,7 @@ public class CapActoI : CapituloBase
 
         // A partir de aquí, algo te sigue
         if (h.Director != null) h.Director.Habilitar(true);
-        h.Objetivo("¿La salida? Hay algo de concreto entre la maleza...");
+        h.Objetivo("Encuentra las 5 llaves");
     }
 
     IEnumerator Saludo(MisionManager h)

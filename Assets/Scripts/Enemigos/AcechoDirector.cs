@@ -140,4 +140,41 @@ public class AcechoDirector : MonoBehaviour
 
     /// <summary>Para la historia: forzar una aparición ahora.</summary>
     public void ForzarAparicion() => tension = tensionParaSoltarMonstruo;
+
+    public bool HayMonstruoActivo => actual != null && actual.Activo;
+
+    /// <summary>Para la historia: suelta un monstruo YA, cerca de un punto (aunque el director esté apagado).</summary>
+    public void ForzarEn(Vector3 punto)
+    {
+        if (actual != null && actual.Activo) return;
+        List<EnemigoBase> libres = enemigos.FindAll(e => e != null && e.EstadoActual == EnemigoBase.Estado.Inactivo);
+        if (libres.Count == 0) return;
+        actual = libres[Random.Range(0, libres.Count)];
+        Vector2 r = Random.insideUnitCircle.normalized * Random.Range(8f, 14f);
+        actual.ActivarEn(punto + new Vector3(r.x, 0, r.y));
+        tension = 0f;
+    }
+
+    // ------------------------------------------------------------------ Latido cuando algo está cerca
+
+    AudioSource latido;
+
+    void LateUpdate()
+    {
+        if (jugador == null) return;
+        if (latido == null)
+        {
+            latido = gameObject.AddComponent<AudioSource>();
+            latido.clip = ProceduralAudio.Latido();
+            latido.loop = true; latido.spatialBlend = 0f; latido.volume = 0f;
+            latido.Play();
+        }
+        float cerca = 999f;
+        foreach (EnemigoBase e in enemigos)
+            if (e != null && e.Activo) cerca = Mathf.Min(cerca, Vector3.Distance(e.transform.position, jugador.position));
+        float objetivo = cerca < 25f ? Mathf.InverseLerp(25f, 3f, cerca) : 0f;
+        latido.volume = Mathf.MoveTowards(latido.volume, objetivo * 0.9f, Time.deltaTime);
+        latido.pitch = 1f + objetivo * 0.6f;
+        if (objetivo > 0.6f && Random.value < 0.01f) VHSOverlay.Glitch(objetivo * 0.4f, 0.15f);
+    }
 }

@@ -110,6 +110,13 @@ public class ElAsomado : EnemigoBase
         voz.PlayOneShot(grito, 0.4f);
     }
 
+    /// <summary>Soltado por la historia: entra corriendo desde ese punto.</summary>
+    public override void ActivarEn(Vector3 punto)
+    {
+        base.ActivarEn(punto);
+        if (EstadoActual == Estado.Acechando) EmpezarCarrera();
+    }
+
     public override void Reiniciar()
     {
         base.Reiniciar();

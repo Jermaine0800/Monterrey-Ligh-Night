@@ -83,6 +83,14 @@ public abstract class EnemigoBase : Entidad, IReiniciable
 
     protected virtual void AlActivar() { }
 
+    /// <summary>Lo suelta la historia en un lugar concreto (la entrada de la capilla, junto a ti...).</summary>
+    public virtual void ActivarEn(Vector3 punto)
+    {
+        Activar();
+        if (EstadoActual != Estado.Acechando) return;
+        Teletransportar(Mundo.EnSuelo(punto));
+    }
+
     /// <summary>Termina su intento y se esconde.</summary>
     protected void Retirarse(bool conGlitch = true)
     {

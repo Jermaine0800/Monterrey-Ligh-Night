@@ -6,6 +6,10 @@ public class Casillero : MonoBehaviour, IInteractable
 {
     public Transform puerta;   // se abre girando
     public bool Abierto { get; private set; }
+    [Tooltip("La llave 3 está aquí adentro: no se puede tomar hasta abrir el casillero")]
+    public LlaveBucle llave;
+
+    void Start() { if (llave != null) llave.Disponible = false; }
 
     public const string TituloDocumento = "EXPEDIENTE 08  —  CLASIFICADO";
     public const string CuerpoDocumento =
@@ -37,7 +41,8 @@ public class Casillero : MonoBehaviour, IInteractable
             l.Recargar(1f);
             l.duracionBateria *= 1.6f;
         }
-        DialogoUI.Susurrar("", "Batería de alto rendimiento. La linterna aguantará más.", 3.5f);
+        if (llave != null) llave.Disponible = true;
+        DialogoUI.Susurrar("", "Batería de alto rendimiento... y una llave.", 3.5f);
         StartCoroutine(DocumentoUI.Mostrar(TituloDocumento, CuerpoDocumento, 1.5f));
     }
 }

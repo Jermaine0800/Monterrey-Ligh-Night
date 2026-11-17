@@ -113,7 +113,7 @@ public class SaludJugador : Entidad
             negro.color = new Color(0, 0, 0, t / 1.2f);
             yield return null;
         }
-        textoMuerte.text = "S E Ñ A L   P E R D I D A\n\n<size=24>rebobinando cinta...</size>";
+        textoMuerte.text = "S E Ñ A L   P E R D I D A\n\n<size=24>rebobinando cinta... la noche vuelve a empezar</size>";
         textoMuerte.supportRichText = true;
         yield return new WaitForSeconds(3f);
 

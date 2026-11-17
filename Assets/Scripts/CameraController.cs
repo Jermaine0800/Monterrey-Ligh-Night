@@ -60,8 +60,8 @@ public class CameraController : MonoBehaviour
             g.transform.SetParent(mia.transform, false);
             Light l = g.AddComponent<Light>();
             l.type = LightType.Point;
-            l.range = 7f;
-            l.intensity = 0.9f;
+            l.range = 10f;
+            l.intensity = 2.2f;
             l.color = new Color(0.85f, 0.88f, 1f);
             l.shadows = LightShadows.None;
         }

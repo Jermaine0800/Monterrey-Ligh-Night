@@ -7,3 +7,8 @@ MONSTRUOS
 - "La Sonriente" usa hooded_figure de Lowbit Lab (itch.io) - licencia del pack: uso libre en juegos, sin crédito obligatorio, prohibido redistribuir los archivos sueltos.
 - "El Asomado" usa DC_Mimic de Desert Cryptids - Assets by Hearthlane (itch.io) - prohibido redistribuir los archivos sueltos.
 - Cara de La Sonriente: textura original hecha para este proyecto.
+
+ESCENARIOS (LAS 5 LLAVES)
+- Panteón: "PSX Graveyard Starter Pack" por Nickben12 - https://nickben12.itch.io/psx-graveyard-starter-pack - gratis para proyectos personales y comerciales, prohibido revender o redistribuir los modelos sueltos.
+- Capilla: "PSX Abandoned Church" por Shazly - https://iishazlyii.itch.io/psx-psx-abandoned-church - asset gratuito (Name your own price).
+- Campamento, túnel, mirador, llaves y puerta del bucle: hechos para este proyecto.

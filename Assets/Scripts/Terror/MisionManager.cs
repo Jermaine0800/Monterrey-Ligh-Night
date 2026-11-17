@@ -25,6 +25,10 @@ public class MisionManager : MonoBehaviour
     public TunelLineaK tunel;
     public Transform mirador;
 
+    [Header("Las 5 llaves (lo llena el menú Monterrey/11)")]
+    public SitioLlave[] sitios;
+    public PuertaBucle puertaBucle;
+
     [Header("Ajustes")]
     public float distanciaHablar = 5.5f;
     public string escenaMenu = "MainMenu";
@@ -61,8 +65,8 @@ public class MisionManager : MonoBehaviour
         {
             new CapPrologo(),
             new CapActoI(),
-            new CapActoII(),
-            new CapActoIII(),
+            new CapBusqueda(),
+            new CapFinal(),
         };
 
         foreach (CapituloBase c in capitulos)
@@ -103,13 +107,14 @@ public class MisionManager : MonoBehaviour
     }
 
     /// <summary>El Vigía aparece, espera a que te acerques, habla y se va cuando dejas de mirarlo.</summary>
-    public IEnumerator EscenaVigia(Vector3 punto, GuiaController.Pose pose, string[] lineas, bool caminaHaciaTi = false)
+    public IEnumerator EscenaVigia(Vector3 punto, GuiaController.Pose pose, string[] lineas, bool caminaHaciaTi = false, float distancia = -1f)
     {
+        if (distancia <= 0f) distancia = distanciaHablar;
         guia.Aparecer(punto, Jugador.position, pose);
         if (caminaHaciaTi) guia.CaminarHacia(Jugador.position + (punto - Jugador.position).normalized * 3.5f);
 
         float espera = 0f, ultimoLlamado = 0f;
-        while (Vector3.Distance(Jugador.position, guia.transform.position) > distanciaHablar)
+        while (Vector3.Distance(Jugador.position, guia.transform.position) > distancia)
         {
             espera += Time.deltaTime;
             if (espera - ultimoLlamado > 12f)
@@ -118,7 +123,7 @@ public class MisionManager : MonoBehaviour
                 string[] llamados = { "Por aquí.", "No me hagas ir por ti.", "Frío, frío... más frío.", "Te estoy viendo. Ven." };
                 DialogoUI.Susurrar(guia.nombre, llamados[UnityEngine.Random.Range(0, llamados.Length)]);
             }
-            if (Vector3.Distance(Jugador.position, guia.transform.position) > 45f && !guia.JugadorMeVe())
+            if (Vector3.Distance(Jugador.position, guia.transform.position) > Mathf.Max(45f, distancia + 10f) && !guia.JugadorMeVe())
                 guia.Aparecer(Adelante(12f, 40f), Jugador.position, GuiaController.Pose.Idle);
             yield return null;
         }
@@ -171,30 +176,5 @@ public class MisionManager : MonoBehaviour
         }
         Vector2 r = UnityEngine.Random.insideUnitCircle.normalized * UnityEngine.Random.Range(Mathf.Max(min, 4f), Mathf.Max(max, 6f));
         return Mundo.EnSuelo(centro + new Vector3(r.x, 0, r.y));
-    }
-}
-
-/// <summary>Parpadeo suave de una luz (ánimas, monitores, lámparas).</summary>
-public class Parpadeo : MonoBehaviour
-{
-    Light l; float baseI; float semilla;
-    void Start() { l = GetComponent<Light>(); baseI = l != null ? l.intensity : 1f; semilla = UnityEngine.Random.value * 100f; }
-    void Update() { if (l) l.intensity = baseI * (0.6f + 0.4f * Mathf.PerlinNoise(semilla, Time.time * 2f)); }
-}
-
-/// <summary>Parpadeo nervioso de encendido/apagado (linterna tirada, lámparas de túnel fallando, baliza).</summary>
-public class ParpadeoFuerte : MonoBehaviour
-{
-    public float encendido = 0.35f, apagado = 0.25f;
-    public bool regular = false;
-    Light l; float baseI, siguiente; bool on = true;
-    void Start() { l = GetComponent<Light>(); baseI = l != null ? l.intensity : 1f; }
-    void Update()
-    {
-        if (l == null || Time.time < siguiente) return;
-        on = !on;
-        l.intensity = on ? baseI : 0f;
-        float d = on ? encendido : apagado;
-        siguiente = Time.time + (regular ? d : d * UnityEngine.Random.Range(0.2f, 1.8f));
     }
 }

@@ -4,58 +4,48 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// ACTO III — EL MIRADOR. La niebla se pone roja, la cinta tiembla. Una baliza parpadea
-/// en el mirador. Cuando llegas, el Guía cae de las copas de los árboles frente a la cámara,
+/// FINAL — LA PUERTA DEL BUCLE. Con las 5 llaves vuelves al claro donde despertaste.
+/// La reja se abre... y al cruzar, el Guía cae de las copas de los árboles frente a la cámara,
 /// la imagen se congela y la cinta se corta: SEÑAL PERDIDA.
 /// </summary>
-public class CapActoIII : CapituloBase
+public class CapFinal : CapituloBase
 {
-    public override string Titulo => "Acto III: el mirador";
+    public override string Titulo => "Final: la puerta del bucle";
 
     public override IEnumerator Jugar(MisionManager h)
     {
         SaludJugador salud = h.Jugador.GetComponent<SaludJugador>();
         if (salud != null) salud.GuardarPuntoControl();
-        h.StartCoroutine(NieblaRoja(8f));
-        VHSOverlay.Glitch(0.8f, 1.5f);
-        yield return new WaitForSeconds(2f);
+        if (h.Director != null) h.Director.Habilitar(false);
 
-        Vector3 cerca = h.Adelante(6f, 25f);
-        yield return h.EscenaVigia(cerca, GuiaController.Pose.Intimidar, new[]
+        PuertaBucle p = h.puertaBucle;
+        LlavesBucle hud = LlavesBucle.Instancia;
+        if (p == null) { Debug.LogWarning("[Historia] No hay Puerta del Bucle (menú Monterrey/11)."); yield break; }
+        if (hud != null) { hud.destino = p.transform; hud.nombreDestino = "LA PUERTA DEL BUCLE"; }
+
+        yield return new WaitForSeconds(1.5f);
+        yield return h.EscenaVigia(h.Adelante(6f, 20f), GuiaController.Pose.Intimidar, new[]
         {
-            "Intimidar|Leíste el expediente. Qué mal. Ahora él sabe que sabes.",
-            "Hablar|¿Que quién es él? Ay, por favor. Lee otra vez la designación.",
-            "Senalar|¿La salida? Arriba, en el mirador. Donde parpadea la luz roja. Te lo prometo.",
-            "Reir|Yo nunca miento. Bueno... casi nunca. Bueno...",
-        });
+            "Intimidar|Cinco. Las tienes todas. Nadie había llegado tan lejos. Bueno, uno. No le fue bien.",
+            "Hablar|¿Te acuerdas de dónde despertaste? Ahí hay una reja. Siempre estuvo ahí. Nunca la viste.",
+            "Senalar|Ve. Ábrela. Sal del bucle.",
+            "Reir|Yo te espero del otro lado. Siempre espero.",
+        }, false, 20f);
 
-        if (h.Director != null)
-        {
-            h.Director.tensionPorSegundo *= 1.6f;
-            h.Director.Habilitar(true);
-        }
-
-        if (h.mirador == null) { Debug.LogWarning("[Historia] No hay mirador en la escena (menú Monterrey/10)."); yield break; }
-        h.Objetivo("Sube al mirador  (sigue la baliza roja)");
-        yield return h.EsperarHasta(() => h.Distancia(h.mirador.position) < 6f, true, () => h.mirador.position);
+        if (h.Director != null) { h.Director.Habilitar(true); h.Director.ForzarEn(h.Jugador.position); }
+        h.Objetivo("Vuelve al claro: abre la puerta del bucle");
+        yield return h.EsperarHasta(() => h.Distancia(p.transform.position) < 5f);
 
         if (h.Director != null) h.Director.Habilitar(false);
-        yield return new WaitForSeconds(2.5f);   // un momento de calma... demasiado
+        p.Abrir();
+        DialogoUI.Susurrar("", "Se abrió. Del otro lado... es el mismo bosque.", 3.5f);
+        h.Objetivo("Cruza");
+        Vector3 cruce = p.transform.position + p.transform.forward * 2.5f;
+        yield return h.EsperarHasta(() => h.Distancia(cruce) < 2f);
+
+        yield return new WaitForSeconds(1.5f);   // un momento de calma... demasiado
         yield return Caida(h);
         yield return SenalPerdida(h);
-    }
-
-    static IEnumerator NieblaRoja(float segundos)
-    {
-        Color desde = RenderSettings.fogColor, hasta = new Color(0.16f, 0.02f, 0.02f);
-        float d0 = RenderSettings.fogDensity, d1 = d0 + 0.012f;
-        for (float t = 0; t < segundos; t += Time.deltaTime)
-        {
-            float k = t / segundos;
-            RenderSettings.fogColor = Color.Lerp(desde, hasta, k);
-            RenderSettings.fogDensity = Mathf.Lerp(d0, d1, k);
-            yield return null;
-        }
     }
 
     /// <summary>El Guía cae de las copas de los árboles justo frente a la cámara.</summary>
