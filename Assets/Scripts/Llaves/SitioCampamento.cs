@@ -24,6 +24,8 @@ public class SitioCampamento : SitioLlave
         "Hablar|La llave no brilla sola. Ilumínala. Y no te tardes: aquí ya hay alguien más buscando.",
     };
 
+    public override string VozAlLlegar => "campamento";
+
     public override string ObjetivoLlegar => "Llave 1: el campamento del equipo";
 
     protected override IEnumerator Reto(MisionManager h)

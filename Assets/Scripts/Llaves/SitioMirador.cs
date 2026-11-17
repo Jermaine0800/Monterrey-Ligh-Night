@@ -16,6 +16,8 @@ public class SitioMirador : SitioLlave
 
     public override string[] LineasLlegada => new string[0];
 
+    public override string VozAlLlegar => "mirador";
+
     public override string ObjetivoLlegar => "Llave 5: el mirador (sigue la baliza roja)";
 
     public override IEnumerator Jugar(MisionManager h)

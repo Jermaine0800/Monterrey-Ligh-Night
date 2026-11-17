@@ -67,7 +67,8 @@ public class MainMenuController : MonoBehaviour
     {
         srcDrone = gameObject.AddComponent<AudioSource>();
         srcDrone.clip = ProceduralAudio.Drone();
-        srcDrone.loop = true; srcDrone.volume = 0.45f; srcDrone.Play();
+        srcDrone.loop = true; srcDrone.volume = 0.2f; srcDrone.Play();
+        MusicaFondo.Menu(0.7f);   // la canción ambiental del menú (sigue sonando hasta el prólogo)
 
         srcEstatica = gameObject.AddComponent<AudioSource>();
         srcEstatica.clip = ProceduralAudio.Estatica();
@@ -402,7 +403,7 @@ public class MainMenuController : MonoBehaviour
         {
             t += Time.unscaledDeltaTime;
             fundido.color = new Color(0, 0, 0, Mathf.Clamp01(t / 1.2f));
-            srcDrone.volume = Mathf.Lerp(0.45f, 0f, t / 1.2f);
+            srcDrone.volume = Mathf.Lerp(0.2f, 0f, t / 1.2f);
             yield return null;
         }
         while (op.progress < 0.9f) yield return null;

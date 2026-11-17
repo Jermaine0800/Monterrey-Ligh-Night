@@ -97,6 +97,7 @@ public class SaludJugador : Entidad
         VHSOverlay.Glitch(0.7f, 0.35f);
         HorrorInput.Vibrar(0.9f, 0.7f, 0.35f, this);
         Color c = vinetaRoja.color; c.a = 1f; vinetaRoja.color = c;
+        if (EstaVivo && Vida01 < 0.35f) VozProtagonista.Decir("herido", 30f);
     }
 
     protected override void Morir()

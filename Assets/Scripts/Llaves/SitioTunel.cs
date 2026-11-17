@@ -20,6 +20,8 @@ public class SitioTunel : SitioLlave
         "Sentado|Mira la pintura del muro. Con la linterna. No muerde. Creo.",
     };
 
+    public override string VozAlLlegar => "tunel";
+
     public override string ObjetivoLlegar => "Llave 3: el muro de concreto en la ladera";
 
     protected override IEnumerator Reto(MisionManager h)

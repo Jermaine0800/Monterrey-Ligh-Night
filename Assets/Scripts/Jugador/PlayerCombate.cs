@@ -15,6 +15,42 @@ public class PlayerCombate : MonoBehaviour
     [Tooltip("Momento del golpe dentro de la animación (segundos)")]
     public float retrasoImpacto = 0.25f;
 
+    // ---- Arma (pala, tubo...) con usos limitados
+    public bool TieneArma => usosArma > 0;
+    public string NombreArma { get; private set; } = "";
+    public int UsosArma => usosArma;
+    int usosArma;
+    float danioArma, alcanceArma;
+    GameObject visualArma;
+
+    /// <summary>Equipa un arma: pega más fuerte y más lejos hasta que se rompe.</summary>
+    public void EquiparArma(string nombre, float danio, float alcance, int usos, GameObject visual)
+    {
+        if (visualArma != null) Destroy(visualArma);
+        NombreArma = nombre; danioArma = danio; alcanceArma = alcance; usosArma = usos;
+        visualArma = visual;
+        if (visual != null)
+        {
+            Animator a = GetComponentInChildren<Animator>();
+            Transform mano = a != null && a.isHuman ? a.GetBoneTransform(HumanBodyBones.LeftHand) : null;
+            visual.transform.SetParent(mano != null ? mano : transform, false);
+            visual.transform.localPosition = mano != null ? new Vector3(0, 0.05f, 0.04f) : new Vector3(-0.35f, 1f, 0.3f);
+            visual.transform.localRotation = Quaternion.Euler(0, 0, 90f);
+        }
+    }
+
+    void Gastar()
+    {
+        if (usosArma <= 0) return;
+        usosArma--;
+        if (usosArma == 0)
+        {
+            DialogoUI.Susurrar("", "La " + NombreArma.ToLower() + " se rompió.", 2.5f);
+            src.PlayOneShot(ProceduralAudio.Rechinido(77), 0.8f);
+            if (visualArma != null) Destroy(visualArma);
+        }
+    }
+
     Animator animator;
     PlayerMovement movimiento;
     AudioSource src;
@@ -61,15 +97,18 @@ public class PlayerCombate : MonoBehaviour
     IEnumerator Impacto()
     {
         yield return new WaitForSeconds(retrasoImpacto);
-        Vector3 centro = transform.position + Vector3.up * 1.2f + transform.forward * alcance;
+        float a = TieneArma ? alcanceArma : alcance;
+        Vector3 centro = transform.position + Vector3.up * 1.2f + transform.forward * a;
         bool pego = false;
-        foreach (Collider c in Physics.OverlapSphere(centro, radio, ~0, QueryTriggerInteraction.Collide))
+        foreach (Collider c in Physics.OverlapSphere(centro, radio * (TieneArma ? 1.3f : 1f), ~0, QueryTriggerInteraction.Collide))
         {
             if (c.transform.IsChildOf(transform)) continue;
             IDaniable d = c.GetComponentInParent<IDaniable>();
             if (d != null && d.EstaVivo)
             {
-                d.RecibirDanio(danio, transform.position);
+                bool conArma = TieneArma;
+                d.RecibirDanio(conArma ? danioArma : danio, transform.position);
+                if (conArma) Gastar();
                 pego = true;
                 break;
             }

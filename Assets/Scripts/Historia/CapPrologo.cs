@@ -46,8 +46,13 @@ public class CapPrologo : CapituloBase
         VHSOverlay.Glitch(1f, 1.2f);
         yield return new WaitForSeconds(1.2f);
 
-        HorrorGameState.modo = HorrorGameState.Modo.Jugando;
-        yield return Fundido(negro, 1f, 0f, 2.5f);
+        play.text = "";
+        MusicaFondo.Desvanecer(10f);
+        h.StartCoroutine(Fundido(negro, 1f, 0f, 2.5f));
+        yield return h.CinematicaIntro();
         Object.Destroy(c.gameObject);
+        HorrorGameState.modo = HorrorGameState.Modo.Jugando;
+        yield return new WaitForSeconds(1f);
+        VozProtagonista.Decir("despertar", 0f);
     }
 }

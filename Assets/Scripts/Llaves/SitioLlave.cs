@@ -22,6 +22,8 @@ public abstract class SitioLlave : MonoBehaviour
     /// <summary>Lo que dice al llegar (pista del reto).</summary>
     public abstract string[] LineasLlegada { get; }
     public abstract string ObjetivoLlegar { get; }
+    /// <summary>Frase del protagonista al ver el lugar (id de VozProtagonista).</summary>
+    public virtual string VozAlLlegar => null;
 
     /// <summary>Flujo completo del lugar. Normalmente no se sobreescribe; se sobreescribe <see cref="Reto"/>.</summary>
     public virtual IEnumerator Jugar(MisionManager h)
@@ -37,6 +39,7 @@ public abstract class SitioLlave : MonoBehaviour
 
         // 2) Te espera en la entrada (solo cuando ya estás cerca)
         yield return h.EsperarHasta(() => h.Distancia(transform.position) < radioLlegada + 25f);
+        if (!string.IsNullOrEmpty(VozAlLlegar)) VozProtagonista.Decir(VozAlLlegar, 0f);
         if (puntoVigia != null && LineasLlegada != null && LineasLlegada.Length > 0)
             yield return h.EscenaVigia(puntoVigia.position, GuiaController.Pose.Sentado, LineasLlegada, false, 40f);
         yield return h.EsperarHasta(() => h.Distancia(transform.position) < radioLlegada);
@@ -53,6 +56,7 @@ public abstract class SitioLlave : MonoBehaviour
             llave.Disponible = true;
             yield return h.EsperarHasta(() => llave.Tomada);
         }
+        VozProtagonista.Decir("llave", 0f);
         yield return AlTomarLlave(h);
         Completado = true;
         if (hud != null) hud.destino = null;

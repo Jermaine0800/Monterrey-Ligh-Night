@@ -35,6 +35,7 @@ public class PlayerEscondite : MonoBehaviour
     {
         if (Escondido || e == null || e.Ocupado) return;
         StartCoroutine(RutinaEntrar(e));
+        if (AcechoDirector.Instancia != null && AcechoDirector.Instancia.HayMonstruoActivo) VozProtagonista.Decir("escondido", 20f);
     }
 
     IEnumerator RutinaEntrar(Escondite e)

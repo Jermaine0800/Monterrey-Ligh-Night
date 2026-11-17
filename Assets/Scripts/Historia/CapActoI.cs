@@ -20,12 +20,14 @@ public class CapActoI : CapituloBase
             Transform luz = h.linternaEnSuelo.Find("LuzParpadeante");
             if (luz != null) Object.Destroy(luz.gameObject);
         }
+        VozProtagonista.Decir("linterna", 0f);
         h.Objetivo("Préndela  [X]");
         float t = 0f;
         while (!h.Linterna.Encendida && t < 12f) { t += Time.deltaTime; yield return null; }
 
         // 2) El Vigía se presenta
         yield return new WaitForSeconds(2f);
+        VozProtagonista.Decir("vigia", 0f);
         yield return h.EscenaVigia(h.JuntoAArbol(h.Jugador.position, 7f, 16f), GuiaController.Pose.Sentado, new[]
         {
             "Sentado|Vaya, vaya. Despertaste. Otra vez. Ah, ¿no te acuerdas? Normal. Nadie se acuerda.",
@@ -64,6 +66,7 @@ public class CapActoI : CapituloBase
         Vector3 frente = h.Adelante(14f, 10f);
         Vector3 p = h.JuntoAArbol(frente, 0f, 6f);
         g.Aparecer(p, h.Jugador.position, GuiaController.Pose.Saludar);
+        VozProtagonista.Decir("saludo", 0f);
         float velocidad = g.animator != null ? g.animator.speed : 1f;
         if (g.animator != null) g.animator.speed = 0.55f;
 

@@ -15,7 +15,7 @@ public abstract class EnemigoBase : Entidad, IReiniciable
 
     [Header("Susto")]
     public float distanciaSusto = 2.2f;
-    public float danioSusto = 34f;
+    public float danioSusto = 25f;
     public float enfriamientoSusto = 25f;
 
     [Header("Destierro")]
@@ -76,12 +76,42 @@ public abstract class EnemigoBase : Entidad, IReiniciable
     public virtual void Activar()
     {
         if (EstadoActual == Estado.Desterrado || !EstaVivo) return;
+        enVistazo = false;
         BuscarJugador();
         EstadoActual = Estado.Acechando;
         AlActivar();
     }
 
     protected virtual void AlActivar() { }
+
+    bool enVistazo;
+
+    /// <summary>
+    /// Aparición psicológica: se deja ver un momento en un punto (entre los árboles, detrás de ti)
+    /// y desaparece en cuanto lo miras de frente. No ataca.
+    /// </summary>
+    public IEnumerator Vistazo(Vector3 punto, float maximo)
+    {
+        if (EstadoActual != Estado.Inactivo || !BuscarJugador()) yield break;
+        enVistazo = true;
+        transform.position = Mundo.EnSuelo(punto);
+        MirarJugador(1f);
+        Mostrar(true);
+        Animar("Idle", 0f);
+        float t = 0f;
+        while (t < maximo && enVistazo)
+        {
+            t += Time.deltaTime;
+            if (Mundo.Visible(Centro, 0.3f, false)) { yield return new WaitForSeconds(0.15f); break; }
+            yield return null;
+        }
+        if (enVistazo && EstadoActual == Estado.Inactivo)
+        {
+            VHSOverlay.Glitch(0.25f, 0.12f);
+            Mostrar(false);
+        }
+        enVistazo = false;
+    }
 
     /// <summary>Lo suelta la historia en un lugar concreto (la entrada de la capilla, junto a ti...).</summary>
     public virtual void ActivarEn(Vector3 punto)
@@ -221,6 +251,7 @@ public abstract class EnemigoBase : Entidad, IReiniciable
 
         voz.spatialBlend = 1f;
         Retirarse();
+        VozProtagonista.Decir("susto");
     }
 
     // ------------------------------------------------------------------ Golpes del jugador

@@ -38,7 +38,7 @@ public class CapFinal : CapituloBase
 
         if (h.Director != null) h.Director.Habilitar(false);
         p.Abrir();
-        DialogoUI.Susurrar("", "Se abrió. Del otro lado... es el mismo bosque.", 3.5f);
+        VozProtagonista.Decir("final", 0f);
         h.Objetivo("Cruza");
         Vector3 cruce = p.transform.position + p.transform.forward * 2.5f;
         yield return h.EsperarHasta(() => h.Distancia(cruce) < 2f);

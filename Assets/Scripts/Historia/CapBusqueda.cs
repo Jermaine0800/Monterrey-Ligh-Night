@@ -21,6 +21,7 @@ public class CapBusqueda : CapituloBase
         {
             if (sitio == null || sitio.Completado) continue;
             Debug.Log("[Historia] Lugar: " + sitio.nombreLugar);
+            yield return h.CinematicaLugar(sitio.transform, sitio.nombreLugar);
             yield return sitio.Jugar(h);
             yield return new WaitForSeconds(2f);
         }

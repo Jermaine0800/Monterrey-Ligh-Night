@@ -127,6 +127,7 @@ public class AcechoDirector : MonoBehaviour
         List<EnemigoBase> libres = enemigos.FindAll(e => e != null && e.EstadoActual == EnemigoBase.Estado.Inactivo);
         if (libres.Count == 0) { tension = tensionParaSoltarMonstruo * 0.5f; return; }
         actual = libres[Random.Range(0, libres.Count)];
+        if (MusicaAdaptativa.Instancia != null) MusicaAdaptativa.Instancia.Silencio(3f);
         actual.Activar();
         tension = 0f;
     }
@@ -151,6 +152,7 @@ public class AcechoDirector : MonoBehaviour
         if (libres.Count == 0) return;
         actual = libres[Random.Range(0, libres.Count)];
         Vector2 r = Random.insideUnitCircle.normalized * Random.Range(8f, 14f);
+        if (MusicaAdaptativa.Instancia != null) MusicaAdaptativa.Instancia.Silencio(2.5f);
         actual.ActivarEn(punto + new Vector3(r.x, 0, r.y));
         tension = 0f;
     }

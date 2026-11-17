@@ -24,6 +24,8 @@ public class SitioIglesia : SitioLlave
         "Sentado|¿Ves el confesionario? Recuérdalo. Lo vas a necesitar en... unos tres minutos.",
     };
 
+    public override string VozAlLlegar => "capilla";
+
     public override string ObjetivoLlegar => "Llave 4: la capilla abandonada";
 
     protected override IEnumerator Reto(MisionManager h)

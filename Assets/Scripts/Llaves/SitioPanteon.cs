@@ -22,6 +22,8 @@ public class SitioPanteon : SitioLlave
         "Hablar|Busca las tumbas con calavera. Y si oyes que alguien te sigue entre las cruces... métete a una fosa abierta. Ahí nadie busca.",
     };
 
+    public override string VozAlLlegar => "panteon";
+
     public override string ObjetivoLlegar => "Llave 2: el panteón";
 
     protected override IEnumerator Reto(MisionManager h)

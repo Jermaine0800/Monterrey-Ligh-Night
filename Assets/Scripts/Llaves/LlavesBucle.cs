@@ -81,5 +81,12 @@ public class LlavesBucle : MonoBehaviour, IReiniciable
         textoBucle.supportRichText = true;
         textoBucle.color = new Color(HorrorUI.Hueso.r, HorrorUI.Hueso.g, HorrorUI.Hueso.b, 1f);
         finMensajeBucle = Time.time + 3f;
+        Invoke(nameof(VozBucle), 4f);
+    }
+
+    void VozBucle() { VozProtagonista.Decir("bucle", 0f); }
+
+    void _Fin()
+    {
     }
 }
