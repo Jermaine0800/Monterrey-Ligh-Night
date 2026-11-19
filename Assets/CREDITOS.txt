@@ -17,3 +17,5 @@ MÚSICA Y VOCES
 - Tema del menú: "Fundo Tema de Terror (slow+echo)" - archivo del autor del proyecto.
 - Música adaptativa y de cada lugar: generada por código (SonidosTerror.cs).
 - Voz del protagonista: síntesis de voz de Windows (Microsoft Pablo), no clona a ninguna persona real.
+- Campamento: "PSX Forest Camp Starter Pack" por Nickben12 - https://nickben12.itch.io/psx-forest-camp-starter-pack - gratis, prohibido redistribuir los modelos sueltos.
+- Texturas de pintas, papel picado, cempasúchil, notas, foto, flama y portal: hechas para este proyecto.

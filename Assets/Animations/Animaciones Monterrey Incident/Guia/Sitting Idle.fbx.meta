@@ -71,8 +71,8 @@ ModelImporter:
     importPhysicalCameras: 1
     importVisibility: 1
     importBlendShapes: 1
-    importCameras: 1
-    importLights: 1
+    importCameras: 0
+    importLights: 0
     nodeNameCollisionStrategy: 1
     fileIdsGeneration: 2
     swapUVChannels: 0
@@ -116,32 +116,7 @@ ModelImporter:
   humanDescription:
     serializedVersion: 3
     human: []
-    skeleton:
-    - name: GuiaIncident_texture(Clone)
-      parentName: 
-      position: {x: 0, y: 0, z: 0}
-      rotation: {x: 0, y: 0, z: 0, w: 1}
-      scale: {x: 1, y: 1, z: 1}
-    - name: PS2_Cam
-      parentName: GuiaIncident_texture(Clone)
-      position: {x: -0, y: 1.4499999, z: 6}
-      rotation: {x: 0, y: -1, z: 0, w: 0.00000005960465}
-      scale: {x: 100, y: 100, z: 100}
-    - name: PS2_ColdLight
-      parentName: GuiaIncident_texture(Clone)
-      position: {x: 2, y: 3.1999998, z: 2}
-      rotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-      scale: {x: 100, y: 100, z: 100}
-    - name: PS2_RedLight
-      parentName: GuiaIncident_texture(Clone)
-      position: {x: -2.2, y: 1.5999999, z: 2.5}
-      rotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-      scale: {x: 100, y: 100, z: 100}
-    - name: PS2_Watcher
-      parentName: GuiaIncident_texture(Clone)
-      position: {x: -0, y: 0, z: 0}
-      rotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071067}
-      scale: {x: 100, y: 100, z: 100}
+    skeleton: []
     armTwist: 0.5
     foreArmTwist: 0.5
     upperLegTwist: 0.5
@@ -156,9 +131,9 @@ ModelImporter:
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: ec4b6fa50e09c8e428d76dbbab029b24, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 2
+  animationType: 3
   humanoidOversampling: 1
-  avatarSetup: 2
+  avatarSetup: 1
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
   importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0

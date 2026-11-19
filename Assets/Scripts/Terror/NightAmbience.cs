@@ -23,7 +23,7 @@ public class NightAmbience : MonoBehaviour
     [Tooltip("Tamaño del tramado PSX (cuadritos). El original de VNTG (0.2) se ve como tablero de ajedrez de noche.")]
     [Range(0, 1)] public float tramadoPSX = 0f;
     [Tooltip("Qué tan fuerte se ven los filtros CRT/VHS (1 = como venían, 0.5 = a la mitad)")]
-    [Range(0, 1)] public float intensidadFiltros = 0.5f;
+    [Range(0, 1)] public float intensidadFiltros = 0.35f;
     [Tooltip("Resolución vertical del efecto PSX (pixeleado). 240 = PS1, 360 = más nítido.")]
     public float resolucionPSX = 360f;
 

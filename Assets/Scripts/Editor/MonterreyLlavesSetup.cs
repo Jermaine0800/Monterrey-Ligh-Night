@@ -94,10 +94,12 @@ public static class MonterreyLlavesSetup
             n.neblinaColor = new Color(0.07f, 0.075f, 0.095f);
             n.neblina = 0.022f;
             n.exposicion = 0.9f;
+            n.intensidadFiltros = 0.35f;
+            n.tramadoPSX = 0f;
             EditorUtility.SetDirty(n);
         }
         VHSOverlay vhs = Object.FindAnyObjectByType<VHSOverlay>();
-        if (vhs != null) { vhs.grano = 0.015f; vhs.scanlinesAlpha = 0.27f; EditorUtility.SetDirty(vhs); }
+        if (vhs != null) { vhs.grano = 0.01f; vhs.scanlinesAlpha = 0.19f; EditorUtility.SetDirty(vhs); }
         FlashlightController f = Object.FindAnyObjectByType<FlashlightController>();
         if (f != null) { f.intensidad = 9f; f.rango = 32f; EditorUtility.SetDirty(f); }
     }

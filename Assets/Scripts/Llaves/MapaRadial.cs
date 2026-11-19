@@ -16,7 +16,7 @@ public class MapaRadial : MonoBehaviour
     RectTransform marco, contenido;
     RawImage relieve;
     Text flecha;
-    readonly List<(Transform lugar, Text marca, SitioLlave sitio)> marcas = new List<(Transform, Text, SitioLlave)>();
+    readonly List<(Transform lugar, Image marca, SitioLlave sitio, Text etiqueta)> marcas = new List<(Transform, Image, SitioLlave, Text)>();
     Transform jugador;
     Terrain t;
     Image borde;
@@ -69,10 +69,19 @@ public class MapaRadial : MonoBehaviour
 
     void Agregar(Transform lugar, SitioLlave sitio, string simbolo)
     {
-        Text m = HorrorUI.CrearTexto(marco, "Marca_" + lugar.name, simbolo, 24, new Color(0.95f, 0.78f, 0.38f), TextAnchor.MiddleCenter, FontStyle.Bold);
-        m.rectTransform.anchorMin = m.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        m.rectTransform.sizeDelta = new Vector2(30, 30);
-        marcas.Add((lugar, m, sitio));
+        // Marca = rombo (cuadro girado 45°) con borde negro, y debajo el número de la llave
+        Image sombra = HorrorUI.CrearImagen(marco, "Marca_" + lugar.name, Color.black);
+        sombra.rectTransform.anchorMin = sombra.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        sombra.rectTransform.sizeDelta = new Vector2(20, 20);
+        sombra.rectTransform.localRotation = Quaternion.Euler(0, 0, sitio != null ? 45f : 0f);
+        Image m = HorrorUI.CrearImagen(sombra.transform, "Relleno", new Color(0.95f, 0.78f, 0.38f));
+        m.rectTransform.anchorMin = Vector2.zero; m.rectTransform.anchorMax = Vector2.one;
+        m.rectTransform.offsetMin = new Vector2(3, 3); m.rectTransform.offsetMax = new Vector2(-3, -3);
+        string etq = sitio != null ? (System.Array.IndexOf(FindAnyObjectByType<MisionManager>().sitios, sitio) + 1).ToString() : "SALIDA";
+        Text t = HorrorUI.CrearTexto(marco, "Etiqueta_" + lugar.name, etq, 18, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+        t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        t.rectTransform.sizeDelta = new Vector2(80, 22);
+        marcas.Add((lugar, m, sitio, t));
     }
 
     static void Fijar(RectTransform rt, Vector2 centro, Vector2 tam)
@@ -111,15 +120,17 @@ public class MapaRadial : MonoBehaviour
             Vector2 p = Quaternion.Euler(0, 0, yaw) * new Vector2(d.x, d.z) * escala;
             float max = tamano / 2f - 14f;
             if (p.magnitude > max) p = p.normalized * max;
-            m.marca.rectTransform.anchoredPosition = p;
+            RectTransform contenedor = (RectTransform)m.marca.transform.parent;
+            contenedor.anchoredPosition = p;
+            m.etiqueta.rectTransform.anchoredPosition = p + new Vector2(0, -18);
 
             bool hecha = m.sitio != null && m.sitio.Completado;
             bool esActual = actual != null && (actual == m.lugar || actual.IsChildOf(m.lugar));
-            m.marca.text = m.sitio == null ? "✚" : hecha ? "◇" : "◆";
             Color c = hecha ? new Color(0.6f, 0.6f, 0.6f, 0.6f) : m.sitio == null ? new Color(0.75f, 0.85f, 1f) : new Color(0.95f, 0.78f, 0.38f);
             if (esActual) c.a = 0.4f + 0.6f * Mathf.Abs(Mathf.Sin(Time.time * 3f));
             m.marca.color = c;
-            m.marca.fontSize = esActual ? 30 : 22;
+            contenedor.sizeDelta = Vector2.one * (esActual ? 26f : 18f);
+            m.etiqueta.color = new Color(1, 1, 1, hecha ? 0.4f : 0.9f);
         }
     }
 

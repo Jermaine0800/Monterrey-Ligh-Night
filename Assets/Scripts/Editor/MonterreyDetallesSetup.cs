@@ -50,6 +50,7 @@ public static class MonterreyDetallesSetup
             }
         }
 
+        MonterreyAmbientacionSetup.Construir();
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         Debug.Log("[Monterrey] Detalles listos: música por lugar, curaciones, armas, objetos embrujados, mapa, vida y terror psicológico.");
     }
