@@ -93,7 +93,8 @@ public static class MonterreyAmbientacionSetup
     /// </summary>
     public static void ArreglarVigia()
     {
-        string cuerpoRuta = Guia + "/Guia/Breathing Idle.fbx";
+        // Los FBX de la carpeta Guia/ son SOLO animación (sin malla). El que trae la malla con piel de Mixamo es "M_Incident saludar".
+        string cuerpoRuta = Guia + "/M_Incident saludar.fbx";
         List<string> fbx = new List<string>();
         foreach (string g in AssetDatabase.FindAssets("t:Model", new[] { Guia }))
         {
@@ -132,14 +133,17 @@ public static class MonterreyAmbientacionSetup
         if (PrefabUtility.IsPartOfPrefabInstance(raiz)) PrefabUtility.UnpackPrefabInstance(PrefabUtility.GetOutermostPrefabInstanceRoot(raiz), PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
 
         // Altura y material del modelo viejo
-        float altura = 1.85f;
+        float altura = 1.9f;
         Material[] mats = null;
+        // material original del Vigía (del modelo sin esqueleto)
+        GameObject original = AssetDatabase.LoadAssetAtPath<GameObject>(Guia + "/GuiaIncident_texture.fbx");
+        if (original != null) { Renderer ro = original.GetComponentInChildren<Renderer>(); if (ro != null) mats = ro.sharedMaterials; }
         Renderer[] viejos = raiz.GetComponentsInChildren<Renderer>(true);
         if (viejos.Length > 0)
         {
             Bounds b = viejos[0].bounds; foreach (Renderer r in viejos) b.Encapsulate(r.bounds);
             if (b.size.y > 0.5f && b.size.y < 4f) altura = b.size.y;
-            mats = viejos[0].sharedMaterials;
+            if (mats == null) mats = viejos[0].sharedMaterials;
         }
         // Quitar todo lo viejo (malla en pose T, cámara/luces de vitrina, modelo anterior)
         for (int i = raiz.transform.childCount - 1; i >= 0; i--) Object.DestroyImmediate(raiz.transform.GetChild(i).gameObject);
@@ -165,7 +169,7 @@ public static class MonterreyAmbientacionSetup
             if (nb.size.y > 0.01f) cuerpo.transform.localScale *= altura / nb.size.y;
             foreach (Renderer r in nuevos)
             {
-                if (mats != null && mats.Length > 0 && (r.sharedMaterial == null || r.sharedMaterial.name.StartsWith("Default"))) r.sharedMaterials = mats;
+                if (mats != null && mats.Length > 0) r.sharedMaterials = mats;
                 if (r is SkinnedMeshRenderer smr) smr.updateWhenOffscreen = true;
             }
         }

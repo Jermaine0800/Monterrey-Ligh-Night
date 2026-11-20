@@ -1,0 +1,224 @@
+#if UNITY_EDITOR
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+/// <summary>
+/// SOLO EN EL EDITOR. Recorrido automático para revisar el juego y sacar capturas para el manual:
+/// visita los 5 lugares, el túnel por dentro, muestra al Vigía, a los dos monstruos (idle, caminar, ataque, susto),
+/// el portal, un documento y el menú principal. Mientras tanto anota TODOS los errores y excepciones.
+/// Se activa con el menú Monterrey/16 (crea Temp/capturas.flag y le da Play).
+/// </summary>
+public class CapturasManual : MonoBehaviour
+{
+    public static string Carpeta => Path.GetFullPath(Path.Combine(Application.dataPath, "../../Capturas Manual"));
+    static string Flag => Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/capturas.flag"));
+    static string Reporte => Path.Combine(Carpeta, "reporte_errores.txt");
+
+    readonly List<string> errores = new List<string>();
+    int fotos;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Iniciar()
+    {
+        if (!File.Exists(Flag)) return;
+        if (FindAnyObjectByType<CapturasManual>() != null) return;
+        File.Delete(Flag);
+        Directory.CreateDirectory(Carpeta);
+        MisionManager mm = FindAnyObjectByType<MisionManager>();
+        if (mm != null) mm.saltarPrologo = true;
+        GameObject g = new GameObject("CapturasManual");
+        DontDestroyOnLoad(g);
+        g.AddComponent<CapturasManual>();
+    }
+
+    void OnEnable() { Application.logMessageReceived += Log; }
+    void OnDisable() { Application.logMessageReceived -= Log; }
+
+    void Log(string msg, string stack, LogType t)
+    {
+        if (t == LogType.Error || t == LogType.Exception || t == LogType.Assert)
+            errores.Add("[" + Time.realtimeSinceStartup.ToString("0.0") + "s] " + t + ": " + msg + "\n" + stack);
+    }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(3f);
+        PlayerMovement pm = FindAnyObjectByType<PlayerMovement>();
+        MisionManager mm = FindAnyObjectByType<MisionManager>();
+        GuiaController guia = FindAnyObjectByType<GuiaController>();
+        // La historia no corre durante el recorrido (si no, abre diálogos encima de las capturas)
+        if (mm != null) { mm.StopAllCoroutines(); mm.enabled = false; }
+        if (guia != null) guia.Desaparecer();
+        HorrorGameState.modo = HorrorGameState.Modo.Jugando;
+        if (AcechoDirector.Instancia != null) AcechoDirector.Instancia.Habilitar(false);
+        PsicoDirector psico = FindAnyObjectByType<PsicoDirector>(); if (psico != null) psico.habilitado = false;
+        SaludJugador salud = FindAnyObjectByType<SaludJugador>();
+        Transform j = pm.transform;
+        Vector3 inicio = j.position;
+
+        // Esperar a que termine la cinemática de inicio si la hubiera
+        yield return new WaitForSecondsRealtime(2f);
+        yield return Foto("01_inicio_HUD");
+
+        // Linterna en la mano y prendida
+        FlashlightController fl = FindAnyObjectByType<FlashlightController>();
+        FlashlightItem item = FindAnyObjectByType<FlashlightItem>();
+        PlayerInteraction pi = pm.GetComponent<PlayerInteraction>();
+        if (item != null && pi != null) item.Interact(pi);
+        yield return new WaitForSecondsRealtime(1.2f);
+        if (fl != null) typeof(FlashlightController).GetField("encendida", BindingFlags.Instance | BindingFlags.NonPublic)?.SetValue(fl, true);
+
+        // El Vigía
+        if (guia != null)
+        {
+            Vector3 frente = Frente(j);
+            guia.Aparecer(j.position + frente * 4f, j.position, GuiaController.Pose.Hablar);
+            yield return new WaitForSecondsRealtime(1.5f);
+            yield return Foto("02_vigia_hablando");
+            guia.Animar(GuiaController.Pose.Saludar, 0.05f);
+            yield return new WaitForSecondsRealtime(1.2f);
+            yield return Foto("03_vigia_saludando");
+            guia.Animar(GuiaController.Pose.Senalar, 0.05f);
+            yield return new WaitForSecondsRealtime(1.2f);
+            yield return Foto("04_vigia_senalando");
+            guia.Animar(GuiaController.Pose.Sentado, 0.05f);
+            yield return new WaitForSecondsRealtime(1.2f);
+            yield return Foto("05_vigia_sentado");
+            guia.Desaparecer();
+        }
+
+        // Los 5 lugares
+        if (mm != null && mm.sitios != null)
+            for (int i = 0; i < mm.sitios.Length; i++)
+            {
+                SitioLlave s = mm.sitios[i];
+                if (s == null) continue;
+                Vector3 hacia = inicio - s.transform.position; hacia.y = 0;
+                float d = s is SitioIglesia ? 16f : s is SitioMirador ? 9f : 12f;
+                Vector3 p = Mundo.EnSuelo(s.transform.position + hacia.normalized * d, 0.1f);
+                Ir(pm, p, s.transform.position);
+                yield return new WaitForSecondsRealtime(2.5f);
+                yield return Foto("1" + i + "_lugar_" + Limpio(s.nombreLugar));
+                // un segundo ángulo, más cerca
+                Vector3 lado = Vector3.Cross(Vector3.up, hacia.normalized);
+                Ir(pm, Mundo.EnSuelo(s.transform.position + hacia.normalized * d * 0.45f + lado * 4f, 0.1f), s.transform.position);
+                yield return new WaitForSecondsRealtime(2f);
+                yield return Foto("1" + i + "_lugar_" + Limpio(s.nombreLugar) + "_cerca");
+            }
+
+        // El túnel por dentro
+        if (mm != null && mm.tunel != null && mm.tunel.interior != null)
+        {
+            Transform I = mm.tunel.interior;
+            Ir(pm, I.TransformPoint(new Vector3(-3f, 1.05f, -16f)), I.TransformPoint(new Vector3(-3f, 1.5f, 5f)));
+            yield return new WaitForSecondsRealtime(2f);
+            yield return Foto("20_tunel_anden");
+            Ir(pm, I.TransformPoint(new Vector3(-2.2f, 1.05f, -8f)), mm.tunel.monitor.position);
+            yield return new WaitForSecondsRealtime(2f);
+            yield return Foto("21_tunel_caseta_monitor");
+        }
+
+        // Los monstruos: idle, caminar, ataque y susto
+        Ir(pm, Mundo.EnSuelo(inicio + Vector3.right * 3f, 0.1f), inicio + Vector3.right * 3f + Vector3.forward * 10f);
+        yield return new WaitForSecondsRealtime(1.5f);
+        foreach (EnemigoBase e in FindObjectsByType<EnemigoBase>(FindObjectsInactive.Exclude))
+        {
+            string n = Limpio(e.nombre);
+            // ponerlo enfrente y visible (sin la lógica de "desaparece cuando lo ves")
+            e.transform.position = Mundo.EnSuelo(j.position + Frente(j) * 4.5f);
+            Vector3 mira = j.position - e.transform.position; mira.y = 0;
+            e.transform.rotation = Quaternion.LookRotation(mira);
+            typeof(EnemigoBase).GetMethod("Mostrar", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(e, new object[] { true });
+            yield return null;
+            Animator a = e.GetComponentInChildren<Animator>();
+            foreach (string estado in new[] { "Idle", "Walk", "Run", "Attack", "Death" })
+            {
+                if (a == null || !a.HasState(0, Animator.StringToHash(estado))) { errores.Add("[ANIMACIÓN] " + e.nombre + " no tiene el estado " + estado); continue; }
+                a.Play(estado, 0, 0.35f);
+                yield return new WaitForSecondsRealtime(0.6f);
+                yield return Foto("3x_monstruo_" + n + "_" + estado);
+            }
+            e.Reiniciar();
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+        // Un susto (screamer) de La Sonriente
+        foreach (EnemigoBase e in FindObjectsByType<EnemigoBase>(FindObjectsInactive.Exclude))
+            if (e is LaSonriente)
+            {
+                e.Activar();
+                MethodInfo asustar = typeof(EnemigoBase).GetMethod("Asustar", BindingFlags.Instance | BindingFlags.NonPublic);
+                asustar?.Invoke(e, null);
+                yield return new WaitForSecondsRealtime(0.25f);
+                yield return Foto("39_screamer");
+                yield return new WaitForSecondsRealtime(1.5f);
+                e.Reiniciar();
+                if (salud != null) salud.Curar(100f);
+                break;
+            }
+
+        // Portal
+        if (mm != null && mm.puertaBucle != null)
+        {
+            Transform pb = mm.puertaBucle.transform;
+            Ir(pm, Mundo.EnSuelo(pb.position - pb.forward * 7f, 0.1f), pb.position + Vector3.up * 1.4f);
+            mm.puertaBucle.Abrir();
+            yield return new WaitForSecondsRealtime(4.5f);
+            yield return Foto("40_portal");
+        }
+
+        // Un documento
+        StartCoroutine(DocumentoUI.Mostrar(Casillero.TituloDocumento, Casillero.CuerpoDocumento));
+        yield return new WaitForSecondsRealtime(1.5f);
+        yield return Foto("41_documento");
+
+        // Menú principal
+        SceneManager.LoadScene("MainMenu");
+        yield return new WaitForSecondsRealtime(5f);
+        yield return Foto("00_menu_principal");
+
+        File.WriteAllText(Reporte, "Capturas: " + fotos + "\nErrores/excepciones: " + errores.Count + "\n\n" + string.Join("\n\n", errores));
+        Debug.Log("[Capturas] Listo: " + fotos + " capturas, " + errores.Count + " errores. Carpeta: " + Carpeta);
+        UnityEditor.EditorApplication.isPlaying = false;
+    }
+
+    static Vector3 Frente(Transform j)
+    {
+        Transform c = Camera.main != null ? Camera.main.transform : j;
+        Vector3 f = c.forward; f.y = 0; return f.normalized;
+    }
+
+    static void Ir(PlayerMovement pm, Vector3 pos, Vector3 mirar)
+    {
+        Vector3 d = mirar - pos; d.y = 0;
+        Quaternion r = d.sqrMagnitude > 0.01f ? Quaternion.LookRotation(d) : pm.transform.rotation;
+        pm.Teletransportar(pos, r);
+        CameraController cc = FindAnyObjectByType<CameraController>();
+        if (cc != null)
+        {
+            FieldInfo f = typeof(CameraController).GetField("giroHorizontal", BindingFlags.Instance | BindingFlags.NonPublic);
+            f?.SetValue(cc, r.eulerAngles.y);
+            FieldInfo v = typeof(CameraController).GetField("giroVertical", BindingFlags.Instance | BindingFlags.NonPublic);
+            v?.SetValue(cc, 8f);
+        }
+    }
+
+    IEnumerator Foto(string nombre)
+    {
+        yield return new WaitForEndOfFrame();
+        ScreenCapture.CaptureScreenshot(Path.Combine(Carpeta, nombre + ".png"), 1);
+        fotos++;
+        yield return new WaitForSecondsRealtime(0.4f);
+    }
+
+    static string Limpio(string s)
+    {
+        string r = "";
+        foreach (char c in s.ToLower()) r += char.IsLetterOrDigit(c) ? (c == 'á' ? 'a' : c == 'é' ? 'e' : c == 'í' ? 'i' : c == 'ó' ? 'o' : c == 'ú' ? 'u' : c == 'ñ' ? 'n' : c) : '_';
+        return r;
+    }
+}
+#endif
