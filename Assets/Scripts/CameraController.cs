@@ -157,8 +157,10 @@ public class CameraController : MonoBehaviour
         if (HorrorGameState.PuedeJugar)
         {
             Vector2 mirada = HorrorInput.Mirar;
-            giroHorizontal += mirada.x * sensibilidad * Time.deltaTime;
-            giroVertical -= mirada.y * sensibilidad * Time.deltaTime;
+            Vector2 raton = HorrorInput.MirarRaton * 0.09f * (sensibilidad / 120f);   // grados por píxel, igual a cualquier FPS
+            float inv = HorrorInput.InvertirY ? -1f : 1f;
+            giroHorizontal += mirada.x * sensibilidad * Time.deltaTime + raton.x;
+            giroVertical -= (mirada.y * sensibilidad * Time.deltaTime + raton.y) * inv;
             float min = primeraPersona ? -75f : minVertical;
             float max = primeraPersona ? 75f : maxVertical;
             giroVertical = Mathf.Clamp(giroVertical, min, max);

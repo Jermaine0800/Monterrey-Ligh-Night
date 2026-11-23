@@ -39,7 +39,7 @@ public static class DocumentoUI
         a.PlayOneShot(ProceduralAudio.Rechinido(3), 0.3f);
 
         yield return new WaitForSeconds(0.6f);
-        while (!(HorrorInput.Aceptar || HorrorInput.Cancelar || HorrorInput.RB)) yield return null;
+        while (!(HorrorInput.Avanzar || HorrorInput.Cancelar)) yield return null;
 
         Object.Destroy(c.gameObject);
         HorrorGameState.modo = previo == HorrorGameState.Modo.Dialogo ? HorrorGameState.Modo.Jugando : previo;

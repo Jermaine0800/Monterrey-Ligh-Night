@@ -204,9 +204,9 @@ public static class MonterreyAmbientacionSetup
         return m;
     }
 
-    static Texture2D T(string n) => AssetDatabase.LoadAssetAtPath<Texture2D>(Tex + "/" + n + ".png");
+    internal static Texture2D T(string n) => AssetDatabase.LoadAssetAtPath<Texture2D>(Tex + "/" + n + ".png");
 
-    static GameObject Modelo(string pack, string nombre, Transform padre, Vector3 pos, float giro, bool collider = true, float escala = 1f)
+    internal static GameObject Modelo(string pack, string nombre, Transform padre, Vector3 pos, float giro, bool collider = true, float escala = 1f)
     {
         GameObject pf = AssetDatabase.LoadAssetAtPath<GameObject>(pack + "/FBX/" + nombre + ".fbx");
         if (pf == null) { Debug.LogWarning("Falta " + nombre); return new GameObject(nombre + "_FALTA"); }
@@ -238,7 +238,7 @@ public static class MonterreyAmbientacionSetup
         return g.transform;
     }
 
-    static Transform Cilindro(Transform p, string n, Vector3 posMundo, Vector3 esc, Material m)
+    internal static Transform Cilindro(Transform p, string n, Vector3 posMundo, Vector3 esc, Material m)
     {
         GameObject g = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         g.name = n; g.transform.SetParent(p, true); g.transform.position = posMundo; g.transform.localScale = esc;
@@ -247,7 +247,7 @@ public static class MonterreyAmbientacionSetup
         return g.transform;
     }
 
-    static Transform Plano(Transform p, string n, Vector3 posMundo, Quaternion rot, Vector2 tam, Material m)
+    internal static Transform Plano(Transform p, string n, Vector3 posMundo, Quaternion rot, Vector2 tam, Material m)
     {
         GameObject g = GameObject.CreatePrimitive(PrimitiveType.Quad);
         g.name = n; Object.DestroyImmediate(g.GetComponent<Collider>());
@@ -266,7 +266,7 @@ public static class MonterreyAmbientacionSetup
     }
 
     /// <summary>Grupo de veladoras (velas blancas y rojas con flama), con UNA luz para todo el grupo.</summary>
-    static void Veladoras(Transform p, Vector3 centro, int n, float radio, bool luz = true)
+    internal static void Veladoras(Transform p, Vector3 centro, int n, float radio, bool luz = true)
     {
         Material blanca = Mat("Cera", null, new Color(0.88f, 0.85f, 0.75f));
         Material roja = Mat("VeladoraRoja", null, new Color(0.55f, 0.06f, 0.05f));
@@ -285,7 +285,7 @@ public static class MonterreyAmbientacionSetup
         if (luz) Luz(p, centro + Vector3.up * 0.5f, new Color(1f, 0.6f, 0.28f), 4.5f + radio * 2f, 1.6f);
     }
 
-    static void Cempasuchil(Transform p, Vector3 centro, int n, float radio)
+    internal static void Cempasuchil(Transform p, Vector3 centro, int n, float radio)
     {
         Material flor = Mat("Cempasuchil", T("Cempasuchil"), Color.white, true);
         for (int i = 0; i < n; i++)
@@ -297,7 +297,7 @@ public static class MonterreyAmbientacionSetup
         }
     }
 
-    static void Pinta(Transform p, string tex, Vector3 pos, Quaternion rot, float ancho)
+    internal static void Pinta(Transform p, string tex, Vector3 pos, Quaternion rot, float ancho)
     {
         Texture2D t = T(tex);
         float alto = t != null ? ancho * t.height / t.width : ancho * 0.5f;
@@ -339,7 +339,7 @@ public static class MonterreyAmbientacionSetup
         }
     }
 
-    static void Trampa(Transform p, Vector3 pos)
+    internal static void Trampa(Transform p, Vector3 pos)
     {
         GameObject m = Modelo(Camp, "Bear_Trap_01", p, pos, Random.Range(0f, 360f), false);
         GameObject g = new GameObject("TrampaOso"); g.transform.SetParent(p, true); g.transform.position = Mundo.EnSuelo(pos);
@@ -347,7 +347,7 @@ public static class MonterreyAmbientacionSetup
         TrampaOso t = g.AddComponent<TrampaOso>(); t.modelo = m.transform;
     }
 
-    static void Pilar(Transform p, Vector3 pos, Color c)
+    internal static void Pilar(Transform p, Vector3 pos, Color c)
     {
         // luz alta que se ve desde lejos entre la niebla (guía visual hacia el lugar)
         Light l = Luz(p, pos + Vector3.up * 9f, c, 22f, 1.4f, true);

@@ -52,6 +52,7 @@ public static class MonterreyDetallesSetup
         }
 
         MonterreyAmbientacionSetup.Construir();
+        MonterreyExpansionSetup.Construir();
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         Debug.Log("[Monterrey] Detalles listos: música por lugar, curaciones, armas, objetos embrujados, mapa, vida y terror psicológico.");
     }
@@ -115,7 +116,7 @@ public static class MonterreyDetallesSetup
         l.type = LightType.Point; l.color = c; l.range = 2.2f; l.intensity = 0.8f; l.shadows = LightShadows.None;
     }
 
-    static void Musica(Transform sitio, MusicaSitio.Tipo tipo, float vol, float dist)
+    internal static void Musica(Transform sitio, MusicaSitio.Tipo tipo, float vol, float dist)
     {
         GameObject g = new GameObject("Musica_" + tipo);
         g.transform.SetParent(sitio, false);
@@ -134,7 +135,7 @@ public static class MonterreyDetallesSetup
 
     // ---- Recogibles
 
-    static Curacion Botiquin(Transform padre, Transform sitio, float x, float z, string tipo = "Botiquín")
+    internal static Curacion Botiquin(Transform padre, Transform sitio, float x, float z, string tipo = "Botiquín")
     {
         Transform t = Pivote(padre, "Curacion_" + tipo, sitio, x, z, Random.Range(0f, 360f));
         Material blanco = Mat("Botiquin", new Color(0.85f, 0.85f, 0.8f));
@@ -167,7 +168,7 @@ public static class MonterreyDetallesSetup
         return c;
     }
 
-    static ArmaRecogible Arma(Transform padre, Transform sitio, float x, float z, string tipo)
+    internal static ArmaRecogible Arma(Transform padre, Transform sitio, float x, float z, string tipo)
     {
         Transform t = Pivote(padre, "Arma_" + tipo, sitio, x, z, Random.Range(0f, 360f));
         Transform modelo = new GameObject("Modelo").transform;

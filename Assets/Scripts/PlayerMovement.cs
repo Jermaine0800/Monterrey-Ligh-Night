@@ -29,6 +29,22 @@ public class PlayerMovement : MonoBehaviour
     public bool Corriendo { get; private set; }
     public bool Agachado { get; private set; }
     public float Aguante01 => aguante / aguanteMaximo;
+    /// <summary>Agotado: te quedaste sin aire. No puedes correr hasta recuperar el 35% y caminas un poco más lento.</summary>
+    public bool Agotado { get; private set; }
+    /// <summary>Tope de condición: si estás herido te cansas antes (máximo entre 60% y 100% según la vida).</summary>
+    public float Tope01 { get; private set; } = 1f;
+
+    /// <summary>Gasta condición (golpes, forcejeos). Devuelve false si no te alcanza.</summary>
+    public bool Gastar(float segundos)
+    {
+        if (aguante < segundos * 0.5f) { Agotado = true; return false; }
+        aguante = Mathf.Max(0f, aguante - segundos);
+        if (aguante <= 0.05f) Agotado = true;
+        ultimoGasto = Time.time;
+        return true;
+    }
+    float ultimoGasto = -10f;
+    AudioSource jadeo;
     /// <summary>0 = silencio, 0.3 agachado, 0.6 caminando, 1 corriendo.</summary>
     public float NivelRuido { get; private set; }
     /// <summary>En primera persona el cuerpo gira con la cámara.</summary>
@@ -95,19 +111,32 @@ public class PlayerMovement : MonoBehaviour
         if (HorrorInput.CorrerAlternar) correrAlternado = !correrAlternado;
         if (!moviendose) correrAlternado = false;
         bool quiereCorrer = (HorrorInput.CorrerMantenido || correrAlternado) && moviendose && !Agachado;
-        if (quiereCorrer && aguante > 0.1f)
+        // ---- Condición física ----
+        SaludJugador sj = SaludJugador.Instancia;
+        Tope01 = sj != null ? Mathf.Lerp(0.6f, 1f, sj.Vida01) : 1f;
+        float tope = aguanteMaximo * Tope01;
+        if (quiereCorrer && !Agotado && aguante > 0.1f)
         {
             Corriendo = true;
             aguante = Mathf.Max(0f, aguante - Time.deltaTime);
-            if (aguante <= 0f) correrAlternado = false;
+            ultimoGasto = Time.time;
+            if (aguante <= 0f) { correrAlternado = false; Agotado = true; }
         }
         else
         {
             Corriendo = false;
-            aguante = Mathf.Min(aguanteMaximo, aguante + recuperacion * Time.deltaTime);
+            // Se recupera después de 1 s sin esfuerzo: más rápido quieto o agachado, más lento caminando
+            if (Time.time - ultimoGasto > 1f)
+            {
+                float k = !moviendose ? 1.6f : (Agachado ? 1.3f : 0.8f);
+                aguante = Mathf.Min(tope, aguante + recuperacion * k * Time.deltaTime);
+            }
         }
+        aguante = Mathf.Min(aguante, tope);
+        if (Agotado && aguante >= aguanteMaximo * 0.35f) Agotado = false;
+        Jadear();
 
-        float velocidad = Agachado ? velocidadAgachado : (Corriendo ? velocidadCorrer : velocidadCaminar);
+        float velocidad = Agachado ? velocidadAgachado : (Corriendo ? velocidadCorrer : velocidadCaminar * (Agotado ? 0.82f : 1f));
 
         // ---- Girar el cuerpo ----
         if (PrimeraPersona)
@@ -129,6 +158,7 @@ public class PlayerMovement : MonoBehaviour
         float speedAnim = Corriendo ? 1f : magnitud * 0.5f;
         Animar(speedAnim);
         NivelRuido = !moviendose ? 0f : (Agachado ? 0.25f : (Corriendo ? 1f : 0.6f));
+        if (Agotado) NivelRuido = Mathf.Max(NivelRuido, 0.4f);   // jadear se oye
     }
 
     void Animar(float speed)
@@ -136,6 +166,22 @@ public class PlayerMovement : MonoBehaviour
         if (animator == null) return;
         if (tieneSpeed) animator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
         if (tieneAgachado) animator.SetBool("Agachado", Agachado);
+    }
+
+    /// <summary>Respiración: se oye más fuerte entre más cansado estés (y te delata un poco).</summary>
+    void Jadear()
+    {
+        if (jadeo == null)
+        {
+            jadeo = gameObject.AddComponent<AudioSource>();
+            jadeo.clip = ProceduralAudio.Respiracion(9);
+            jadeo.loop = true; jadeo.volume = 0f; jadeo.spatialBlend = 0f;
+            jadeo.Play();
+        }
+        float cansancio = 1f - Aguante01;
+        float objetivo = Agotado ? 0.55f : Mathf.Clamp01((cansancio - 0.45f) * 1.4f) * 0.35f;
+        jadeo.volume = Mathf.MoveTowards(jadeo.volume, objetivo, Time.deltaTime * 0.6f);
+        jadeo.pitch = Agotado ? 1.25f : 1f;
     }
 
     public void CambiarAgachado(bool valor)

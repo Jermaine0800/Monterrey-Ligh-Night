@@ -122,6 +122,63 @@ public class CapturasManual : MonoBehaviour
             yield return Foto("21_tunel_caseta_monitor");
         }
 
+        // Casa por dentro, zonas nuevas, estación y un escondite
+        if (mm != null && mm.sitios != null)
+            foreach (SitioLlave s in mm.sitios)
+            {
+                if (s is SitioCasa)
+                {
+                    Transform t = s.transform; float y = 0.45f;
+                    Ir(pm, t.TransformPoint(new Vector3(0, y, 5.5f)), t.TransformPoint(new Vector3(0, 1f, 0f)));
+                    yield return new WaitForSecondsRealtime(1.5f); yield return Foto("50_casa_pasillo");
+                    Ir(pm, t.TransformPoint(new Vector3(-0.8f, y, -0.6f)), t.TransformPoint(new Vector3(-0.8f, 1f, -3f)));
+                    yield return new WaitForSecondsRealtime(1.5f); yield return Foto("51_casa_comedor");
+                    Ir(pm, t.TransformPoint(new Vector3(3.6f, y, -0.6f)), t.TransformPoint(new Vector3(6.2f, 1f, -2.6f)));
+                    yield return new WaitForSecondsRealtime(1.5f); yield return Foto("52_casa_recamara");
+                    Ir(pm, t.TransformPoint(new Vector3(-5.0f, y, -1.6f)), t.TransformPoint(new Vector3(-5.4f, 1f, -3.8f)));
+                    yield return new WaitForSecondsRealtime(1.5f); yield return Foto("53_casa_cuarto_llave");
+                    Escondite ropero = null;
+                    foreach (Escondite e in t.GetComponentsInChildren<Escondite>()) if (e.EsMueble) ropero = e;
+                    PlayerEscondite pe = pm.GetComponent<PlayerEscondite>() ?? pm.gameObject.AddComponent<PlayerEscondite>();
+                    if (ropero != null)
+                    {
+                        pe.Entrar(ropero);
+                        yield return new WaitForSecondsRealtime(1.5f); yield return Foto("54_escondido_ropero");
+                        pe.Salir();
+                        yield return new WaitForSecondsRealtime(0.5f);
+                    }
+                }
+                if (s.notaAyer != null)
+                {
+                    Transform n = s.notaAyer.transform.parent;
+                    Ir(pm, Mundo.EnSuelo(n.position + n.forward * 2.2f, 0.1f), n.position);
+                    yield return new WaitForSecondsRealtime(1.2f); yield return Foto("55_notas_" + Limpio(s.nombreLugar));
+                }
+                Transform ex = s.transform.Find("Expansion");
+                if (ex != null)
+                    foreach (Transform z in ex)
+                    {
+                        if (z.name.StartsWith("Letrero") || z.name.StartsWith("Trampa") || z.name.Contains("Modelo") || z.childCount < 3) continue;
+                        Ir(pm, Mundo.EnSuelo(z.TransformPoint(new Vector3(1.5f, 0, 7f)), 0.1f), z.position + Vector3.up);
+                        yield return new WaitForSecondsRealtime(1.5f); yield return Foto("56_zona_" + Limpio(s.nombreLugar) + "_" + z.name);
+                    }
+            }
+        GameObject est = GameObject.Find("_EstacionGuardabosques");
+        if (est != null)
+        {
+            Transform t = est.transform;
+            Ir(pm, Mundo.EnSuelo(t.TransformPoint(new Vector3(-2f, 0, 10f)), 0.1f), t.position + Vector3.up * 2f);
+            yield return new WaitForSecondsRealtime(1.5f); yield return Foto("57_estacion_afuera");
+            Ir(pm, t.TransformPoint(new Vector3(-2.5f, 0, 1.6f)) + Vector3.up * (Mundo.AlturaSuelo(t.position) + 0.8f - t.position.y), t.TransformPoint(new Vector3(-3.5f, 1f, -2f)));
+            yield return new WaitForSecondsRealtime(1.5f); yield return Foto("58_estacion_oficina");
+            Transform torre = t.Find("Torre");
+            if (torre != null)
+            {
+                Ir(pm, Mundo.EnSuelo(torre.position, 6.4f) - t.forward * 0.6f, t.position + t.forward * 30f);
+                yield return new WaitForSecondsRealtime(1.5f); yield return Foto("59_estacion_desde_torre");
+            }
+        }
+
         // Los monstruos: idle, caminar, ataque y susto
         Ir(pm, Mundo.EnSuelo(inicio + Vector3.right * 3f, 0.1f), inicio + Vector3.right * 3f + Vector3.forward * 10f);
         yield return new WaitForSecondsRealtime(1.5f);

@@ -78,14 +78,24 @@ public static class HorrorInput
         }
     }
 
-    /// <summary>Stick derecho (o mouse).</summary>
-    public static Vector2 Mirar
+    /// <summary>Stick derecho (velocidad: se multiplica por el tiempo).</summary>
+    public static Vector2 Mirar => Gamepad.current != null ? Gamepad.current.rightStick.ReadValue() : Vector2.zero;
+    /// <summary>Ratón en píxeles este cuadro (NO se multiplica por el tiempo: así no cambia con los FPS).</summary>
+    public static Vector2 MirarRaton => Mouse.current != null ? Mouse.current.delta.ReadValue() : Vector2.zero;
+    /// <summary>Invertir el eje vertical (Opciones). </summary>
+    public static bool InvertirY => PlayerPrefs.GetInt("invertir_y", 0) == 1;
+
+    /// <summary>Pasar diálogo / cerrar nota: A, E, Enter, Espacio o clic.</summary>
+    public static bool Avanzar => Aceptar || RB || (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
+    /// <summary>Ver la tarjeta de controles: View/Back en el control, F1 en teclado.</summary>
+    public static bool VerControles => (Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame) || Tecla(Key.F1, Key.F1);
+    static int RuedaRaton
     {
         get
         {
-            Vector2 v = Gamepad.current != null ? Gamepad.current.rightStick.ReadValue() : Vector2.zero;
-            if (Mouse.current != null) v += Mouse.current.delta.ReadValue() * 0.05f;
-            return v;
+            if (Mouse.current == null) return 0;
+            float y = Mouse.current.scroll.ReadValue().y;
+            return y > 0.1f ? 1 : y < -0.1f ? -1 : 0;
         }
     }
 
@@ -112,8 +122,8 @@ public static class HorrorInput
     public static bool Interactuar => (Gamepad.current != null && (Gamepad.current.buttonSouth.wasPressedThisFrame || Gamepad.current.rightShoulder.wasPressedThisFrame)) || Tecla(Key.E, Key.Enter);
     /// <summary>Salir del escondite: A, B o E.</summary>
     public static bool SalirEscondite => Interactuar || Agacharse;
-    public static bool ArmaSiguiente => (Gamepad.current != null && Gamepad.current.dpad.right.wasPressedThisFrame) || Tecla(Key.R, Key.Digit2);
-    public static bool ArmaAnterior => (Gamepad.current != null && Gamepad.current.dpad.left.wasPressedThisFrame) || Tecla(Key.Q, Key.Digit1);
+    public static bool ArmaSiguiente => (Gamepad.current != null && Gamepad.current.dpad.right.wasPressedThisFrame) || Tecla(Key.R, Key.Digit2) || RuedaRaton < 0;
+    public static bool ArmaAnterior => (Gamepad.current != null && Gamepad.current.dpad.left.wasPressedThisFrame) || Tecla(Key.Q, Key.Digit1) || RuedaRaton > 0;
     public static bool CurarRapido => (Gamepad.current != null && Gamepad.current.dpad.up.wasPressedThisFrame) || Tecla(Key.H, Key.H);
 
     static bool ultimoFueControl;
@@ -141,7 +151,11 @@ public static class HorrorInput
             case "maletin": return c ? "Y" : "Tab";
             case "golpe": return c ? "RT" : "Clic";
             case "agacharse": return c ? "B" : "C";
-            case "arma": return c ? "◀ ▶" : "Q / R";
+            case "arma": return c ? "◀ ▶" : "Rueda / Q R";
+            case "correr": return c ? "L3 / LB" : "Shift";
+            case "camara": return c ? "R3" : "V";
+            case "pausa": return c ? "Start" : "Esc";
+            case "controles": return c ? "View" : "F1";
             case "curar": return c ? "▲" : "H";
             default: return accion;
         }
@@ -152,7 +166,9 @@ public static class HorrorInput
     {
         if (string.IsNullOrEmpty(t)) return t;
         return t.Replace("[RB]", "[" + Boton("accion") + "]").Replace("[X]", "[" + Boton("linterna") + "]")
-                .Replace("[Y]", "[" + Boton("maletin") + "]").Replace("[RT]", "[" + Boton("golpe") + "]");
+                .Replace("[Y]", "[" + Boton("maletin") + "]").Replace("[RT]", "[" + Boton("golpe") + "]")
+                .Replace("[A]", "[" + Boton("accion") + "]").Replace("[B]", "[" + Boton("agacharse") + "]")
+                .Replace("[LB]", "[" + Boton("correr") + "]").Replace("[▲]", "[" + Boton("curar") + "]");
     }
 
     /// <summary>Texto del estado del control (para el menú).</summary>

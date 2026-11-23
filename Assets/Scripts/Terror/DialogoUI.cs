@@ -155,7 +155,7 @@ public class DialogoUI : MonoBehaviour
             yield return Escribir(linea);
 
             // Esperar A (o Enter) para continuar
-            while (!(HorrorInput.Aceptar || HorrorInput.RB)) yield return null;
+            while (!HorrorInput.Avanzar) yield return null;
             yield return null;
         }
 
@@ -173,7 +173,7 @@ public class DialogoUI : MonoBehaviour
         int mostradas = 0, ultimaVoz = -1;
         while (mostradas < linea.Length)
         {
-            if (HorrorInput.Aceptar || HorrorInput.RB) { mostradas = linea.Length; break; }
+            if (HorrorInput.Avanzar) { mostradas = linea.Length; break; }
             t += Time.unscaledDeltaTime * letrasPorSegundo;
             // Pausas dramáticas en puntos y comas
             int nuevas = Mathf.Min(linea.Length, Mathf.FloorToInt(t));

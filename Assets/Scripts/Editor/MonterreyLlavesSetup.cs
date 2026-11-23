@@ -127,7 +127,7 @@ public static class MonterreyLlavesSetup
         return Mathf.Max(max, hc) - Mathf.Min(min, hc);
     }
 
-    static Vector3 BuscarPlano(Terrain t, Vector3 inicio, float rMin, float rMax, float radio, List<Vector3> evitar, float separacion)
+    internal static Vector3 BuscarPlano(Terrain t, Vector3 inicio, float rMin, float rMax, float radio, List<Vector3> evitar, float separacion)
     {
         Vector3 mejor = Vector3.zero; float mejorPuntaje = float.MaxValue;
         for (float r = rMin; r <= rMax; r += 6f)
@@ -147,7 +147,7 @@ public static class MonterreyLlavesSetup
         return Mundo.EnSuelo(mejor);
     }
 
-    static void QuitarArboles(Terrain t, (Vector3 c, float r)[] zonas)
+    internal static void QuitarArboles(Terrain t, (Vector3 c, float r)[] zonas)
     {
         TerrainData td = t.terrainData;
         Undo.RegisterCompleteObjectUndo(td, "Quitar árboles");
@@ -288,7 +288,7 @@ public static class MonterreyLlavesSetup
         return l;
     }
 
-    static Escondite CrearEscondite(Transform padre, string nombre, Vector3 posMundo, Vector3 tam, string etiqueta)
+    internal static Escondite CrearEscondite(Transform padre, string nombre, Vector3 posMundo, Vector3 tam, string etiqueta)
     {
         GameObject g = new GameObject(nombre);
         g.transform.SetParent(padre, true);

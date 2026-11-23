@@ -34,7 +34,7 @@ public class MainMenuController : MonoBehaviour
     readonly string[] nombresPrincipal = { "NUEVA PARTIDA", "CONTINUAR", "SISTEMA DE COMANDOS", "OPCIONES", "SALIR" };
 
     // Opciones (se guardan en PlayerPrefs y las leen los demás scripts)
-    float brillo, volumen, sensibilidad; bool vibracion;
+    float brillo, volumen, sensibilidad; bool vibracion, invertirY;
 
     void Start()
     {
@@ -46,6 +46,7 @@ public class MainMenuController : MonoBehaviour
         brillo = PlayerPrefs.GetFloat("brillo", 1f);
         volumen = PlayerPrefs.GetFloat("volumen", 0.8f);
         sensibilidad = PlayerPrefs.GetFloat("sensibilidad", 120f);
+        invertirY = PlayerPrefs.GetInt("invertir_y", 0) == 1;
         vibracion = PlayerPrefs.GetInt("vibracion", 1) == 1;
         AudioListener.volume = volumen;
 
@@ -132,13 +133,13 @@ public class MainMenuController : MonoBehaviour
         grupoOpciones = Grupo(raiz, "Opciones");
         Text tOpc = HorrorUI.CrearTexto(grupoOpciones.transform, "TituloOpc", "O P C I O N E S", 34, HorrorUI.Sangre);
         HorrorUI.Colocar(tOpc.rectTransform, new Vector2(0, 1), new Vector2(180, -200), new Vector2(900, 50));
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 6; i++)
         {
             Text t = HorrorUI.CrearTexto(grupoOpciones.transform, "Opc" + i, "", 36, HorrorUI.HuesoTenue);
-            HorrorUI.Colocar(t.rectTransform, new Vector2(0, 1), new Vector2(180, -300 - i * 70), new Vector2(1300, 56));
+            HorrorUI.Colocar(t.rectTransform, new Vector2(0, 1), new Vector2(180, -290 - i * 64), new Vector2(1300, 56));
             itemsOpciones.Add(t);
             Text v = HorrorUI.CrearTexto(grupoOpciones.transform, "Valor" + i, "", 36, HorrorUI.HuesoTenue);
-            HorrorUI.Colocar(v.rectTransform, new Vector2(0, 1), new Vector2(720, -300 - i * 70), new Vector2(700, 56));
+            HorrorUI.Colocar(v.rectTransform, new Vector2(0, 1), new Vector2(720, -290 - i * 64), new Vector2(700, 56));
             valoresOpciones.Add(v);
         }
 
@@ -169,12 +170,12 @@ public class MainMenuController : MonoBehaviour
             ("L",  HorrorUI.Hueso,                 "Stick izq. — caminar   ·   L3 / LB — correr      [WASD · Shift]"),
             ("R",  HorrorUI.Hueso,                 "Stick der. — mirar   ·   R3 — 1ª / 3ª persona     [Ratón · V]"),
             ("A",  new Color(0.3f, 0.7f, 0.3f),    "Acción: recoger, leer, abrir, esconderse        [E]"),
-            ("B",  new Color(0.75f, 0.2f, 0.2f),   "Agacharse  /  salir del escondite  /  atrás      [C]"),
+            ("B",  new Color(0.75f, 0.2f, 0.2f),   "Agacharse  /  salir del escondite  /  atrás   [C · Ctrl]"),
             ("X",  new Color(0.25f, 0.45f, 0.85f), "Linterna                                          [F]"),
             ("Y",  new Color(0.85f, 0.7f, 0.2f),   "Maletín: usar curaciones y equipar armas        [Tab]"),
             ("RT", HorrorUI.Hueso,                 "Golpear con el arma equipada                     [Clic]"),
-            ("✚",  HorrorUI.Hueso,                 "◀ ▶ cambiar arma   ·   ▲ curarse rápido           [Q / R · H]"),
-            ("☰",  HorrorUI.Hueso,                 "Pausa                                             [Esc]"),
+            ("✚",  HorrorUI.Hueso,                 "◀ ▶ cambiar arma   ·   ▲ curarse      [Rueda o Q R · H]"),
+            ("☰",  HorrorUI.Hueso,                 "Pausa   ·   View — ver controles en el juego     [Esc · F1]"),
         };
 
         for (int i = 0; i < filas.Length; i++)
@@ -259,7 +260,7 @@ public class MainMenuController : MonoBehaviour
                 if (HorrorInput.Abajo)  { selOpc = (selOpc + 1) % itemsOpciones.Count; Sonar(clic, 0.6f); RefrescarOpciones(); }
                 if (HorrorInput.Izquierda) AjustarOpcion(-1);
                 if (HorrorInput.Derecha)   AjustarOpcion(+1);
-                if (HorrorInput.Cancelar || (HorrorInput.Aceptar && selOpc == 4)) { GuardarOpciones(); Sonar(clic, 0.6f); MostrarPantalla(Pantalla.Principal); }
+                if (HorrorInput.Cancelar || (HorrorInput.Aceptar && selOpc == 5)) { GuardarOpciones(); Sonar(clic, 0.6f); MostrarPantalla(Pantalla.Principal); }
                 AnimarSeleccion(itemsOpciones, selOpc);
                 break;
 
@@ -334,12 +335,13 @@ public class MainMenuController : MonoBehaviour
 
     void RefrescarOpciones()
     {
-        string[] nombres = { "BRILLO", "VOLUMEN", "SENSIBILIDAD", "VIBRACIÓN", "VOLVER" };
+        string[] nombres = { "BRILLO", "VOLUMEN", "SENSIBILIDAD", "INVERTIR CÁMARA (Y)", "VIBRACIÓN", "VOLVER" };
         string[] valores =
         {
             "◄   " + Barra((brillo - 0.5f) / 1f) + "   ►",
             "◄   " + Barra(volumen) + "   ►",
             "◄   " + Barra((sensibilidad - 40f) / 200f) + "   ►",
+            "◄   " + (invertirY ? "SÍ" : "NO") + "   ►",
             "◄   " + (vibracion ? "SÍ" : "NO") + "   ►",
             "",
         };
@@ -360,7 +362,8 @@ public class MainMenuController : MonoBehaviour
             case 0: brillo = Mathf.Clamp(brillo + d * 0.1f, 0.5f, 1.5f); break;
             case 1: volumen = Mathf.Clamp01(volumen + d * 0.1f); AudioListener.volume = volumen; break;
             case 2: sensibilidad = Mathf.Clamp(sensibilidad + d * 20f, 40f, 240f); break;
-            case 3: vibracion = !vibracion; if (vibracion) Vibrar(0.5f, 0.5f, 0.2f); break;
+            case 3: invertirY = !invertirY; break;
+            case 4: vibracion = !vibracion; if (vibracion) Vibrar(0.5f, 0.5f, 0.2f); break;
             default: return;
         }
         Sonar(clic, 0.6f);
@@ -373,6 +376,7 @@ public class MainMenuController : MonoBehaviour
         PlayerPrefs.SetFloat("volumen", volumen);
         PlayerPrefs.SetFloat("sensibilidad", sensibilidad);
         PlayerPrefs.SetInt("vibracion", vibracion ? 1 : 0);
+        PlayerPrefs.SetInt("invertir_y", invertirY ? 1 : 0);
         PlayerPrefs.Save();
     }
 

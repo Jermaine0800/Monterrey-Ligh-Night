@@ -53,12 +53,12 @@ public class PauseMenu : MonoBehaviour
             "[STICK IZQ]  Caminar  ·  [L3/LB] Correr        (WASD · Shift)",
             "[STICK DER]  Mirar  ·  [R3] 1ª / 3ª persona     (Ratón · V)",
             "[A]          Acción: recoger, leer, esconderse  (E)",
-            "[B]          Agacharse / salir del escondite    (C)",
+            "[B]          Agacharse / salir del escondite    (C · Ctrl)",
             "[X]          Linterna                           (F)",
             "[Y]          Maletín: curar y equipar armas     (Tab)",
             "[RT]         Golpear                            (Clic)",
-            "[◀ ▶]        Cambiar arma  ·  [▲] Curarse       (Q/R · H)",
-            "[START]      Pausa                              (Esc)",
+            "[◀ ▶]        Cambiar arma  ·  [▲] Curarse       (Rueda · Q/R · H)",
+            "[START]      Pausa  ·  [VIEW] Ver controles     (Esc · F1)",
         };
         for (int i = 0; i < filas.Length; i++)
         {

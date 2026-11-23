@@ -131,6 +131,15 @@ public class PlayerCombate : MonoBehaviour
 
         if (HorrorInput.Golpe)
         {
+            // Cada golpe cansa (más con armas pesadas). Sin aire no puedes golpear.
+            PlayerMovement pmv = GetComponent<PlayerMovement>();
+            float costo = !TieneArma ? 0.5f : (NombreArma.Contains("Hacha") || NombreArma.Contains("Pala") ? 1.1f : 0.8f);
+            if (pmv != null && !pmv.Gastar(costo))
+            {
+                DialogoUI.Susurrar("", "...no puedo... necesito aire.", 1.5f);
+                listo = Time.time + 0.8f;
+                return;
+            }
             listo = Time.time + enfriamiento;
             if (tieneTrigger) animator.SetTrigger("Golpe");
             src.pitch = Random.Range(0.9f, 1.2f);
