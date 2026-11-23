@@ -202,7 +202,7 @@ public class InventoryUI : MonoBehaviour
         HorrorUI.Colocar(descItem.rectTransform, new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(1000, 90));
 
         Text ayuda = HorrorUI.CrearTexto(r, "Ayuda", "[A / E] USAR · EQUIPAR · LEER      [✚ / WASD] MOVER      [B / Tab] CERRAR", 22, HorrorUI.HuesoTenue, TextAnchor.MiddleRight);
-        HorrorUI.Colocar(ayuda.rectTransform, new Vector2(1, 0), new Vector2(-70, 110), new Vector2(900, 30));
+        HorrorUI.Colocar(ayuda.rectTransform, new Vector2(1, 1), new Vector2(-70, -150), new Vector2(900, 30));
     }
 
     static Texture2D TexturaECG()
@@ -320,8 +320,11 @@ public class InventoryUI : MonoBehaviour
         for (int i = 0; i < etiquetas.Count; i++)
         {
             ItemDefinition it = i < inventario.objetos.Count ? inventario.objetos[i] : null;
-            if (it != null && pc != null && pc.ArmaActual == it) etiquetas[i].text = "\n\n\nEQUIPADA";
+            if (it != null && pc != null && pc.ArmaActual == it) etiquetas[i].text = "\n\n\nEN MANO";
             else if (it != null && it.tipo == ItemDefinition.Tipo.Arma) etiquetas[i].text = "\n\n\n" + it.usos + " golpes";
+            else if (it != null && it.tipo == ItemDefinition.Tipo.Llave) etiquetas[i].text = "\n\n\n" + (LlavesBucle.Instancia != null ? LlavesBucle.Instancia.Llaves : 0) + " / " + LlavesBucle.Total;
+            else if (it != null && it.tipo == ItemDefinition.Tipo.Nota) etiquetas[i].text = "\n\n\n" + InventarioUtil.Notas.Count + " notas";
+            else if (it != null && it.tipo == ItemDefinition.Tipo.Curacion) etiquetas[i].text = "\n\n\n+" + Mathf.RoundToInt(it.valor);
         }
 
         MostrarSeleccion();
@@ -348,7 +351,8 @@ public class InventoryUI : MonoBehaviour
                 break;
             case ItemDefinition.Tipo.Nota:
                 Cerrar();
-                if (FindAnyObjectByType<SaludJugador>() is MonoBehaviour mb) mb.StartCoroutine(DocumentoUI.Mostrar(it.nombre, it.texto));
+                var nota = InventarioUtil.Notas.Count > 0 ? InventarioUtil.SiguienteNota() : (it.nombre, it.texto);
+                if (FindAnyObjectByType<SaludJugador>() is MonoBehaviour mb) mb.StartCoroutine(DocumentoUI.Mostrar(nota.Item1, nota.Item2));
                 break;
             default:
                 descItem.text = it.descripcion;

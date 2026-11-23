@@ -15,7 +15,12 @@ public class BackpackPickup : MonoBehaviour, IInteractable
         inventory.hasBackPack = true;
         foreach (Rigidbody rb in GetComponentsInChildren<Rigidbody>()) { rb.isKinematic = true; rb.detectCollisions = false; }
         foreach (Collider c in GetComponentsInChildren<Collider>()) c.enabled = false;
-        DialogoUI.Susurrar("", "Mochila. Ahora puedo guardar cosas.   Maletín [Y / Tab]", 4f);
+        DialogoUI.Susurrar("", "Mochila. Ahora puedo guardar cosas.   Maletín [Y]", 4f);
+        // Lo que ya traías antes de la mochila también se guarda
+        PlayerInventory inv = jugador.GetComponent<PlayerInventory>() ?? InventarioUtil.Inventario;
+        PlayerCombate pc = jugador.GetComponent<PlayerCombate>();
+        if (inv != null && pc != null && pc.ArmaActual != null && !inv.Contiene(pc.ArmaActual)) inv.Agregar(pc.ArmaActual);
+        InventarioUtil.CasillaNotas();
         Debug.Log("¡Mochila recogida! Ahora puedes abrir el inventario.");
 
         Collider col = GetComponent<Collider>();

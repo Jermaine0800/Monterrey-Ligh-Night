@@ -179,6 +179,44 @@ public class CapturasManual : MonoBehaviour
             }
         }
 
+        // Prueba del maletín: recoger de verdad (Interact) curaciones, armasM, notas y llaves, y abrirlo
+        {
+            System.Text.StringBuilder logM = new System.Text.StringBuilder();
+            InventoryUI uiM = FindAnyObjectByType<InventoryUI>();
+            PlayerInteraction piM = pm.GetComponent<PlayerInteraction>();
+            PlayerInventory invM = pm.GetComponent<PlayerInventory>() ?? FindAnyObjectByType<PlayerInventory>();
+            BackpackPickup mochilaM = FindAnyObjectByType<BackpackPickup>();
+            PlayerCombate pcM = pm.GetComponent<PlayerCombate>();
+            // 1) un arma ANTES de la mochila (se equipa; al tomar la mochila debe guardarse)
+            ArmaRecogible[] armasM = FindObjectsByType<ArmaRecogible>(FindObjectsSortMode.None);
+            if (uiM != null) uiM.hasBackPack = false;
+            if (armasM.Length > 0 && piM != null) armasM[0].Interact(piM);
+            logM.AppendLine("Antes de la mochila: arma equipada = " + (pcM != null && pcM.TieneArma ? pcM.NombreArma : "ninguna") + ", objetos = " + (invM != null ? invM.objetos.Count : -1));
+            if (mochilaM != null && piM != null) mochilaM.Interact(piM); else if (uiM != null) uiM.hasBackPack = true;
+            yield return null;
+            logM.AppendLine("Después de la mochila: objetos = " + (invM != null ? invM.objetos.Count : -1));
+            foreach (Curacion c in FindObjectsByType<Curacion>(FindObjectsSortMode.None)) { if (piM != null) c.Interact(piM); if (invM != null && invM.Contar(ItemDefinition.Tipo.Curacion) >= 3) break; }
+            for (int i = 1; i < armasM.Length && i < 3; i++) if (piM != null) armasM[i].Interact(piM);
+            InventarioUtil.GuardarNota("PRUEBA — PISTAS DE AYER", "texto 1");
+            InventarioUtil.GuardarNota("PRUEBA — INSTRUCCIONES", "texto 2");
+            InventarioUtil.ActualizarLlaves(1, LlavesBucle.Total, "prueba");
+            InventarioUtil.ActualizarLlaves(2, LlavesBucle.Total, "prueba");
+            yield return null;
+            if (invM != null) foreach (ItemDefinition it in invM.objetos) logM.AppendLine("  · " + it.tipo + " | " + it.nombre + (it.tipo == ItemDefinition.Tipo.Arma ? " | " + it.usos + " golpes" : "") + (it.icono != null ? " | con ícono" : " | SIN ÍCONO"));
+            logM.AppendLine("Total casillas usadas: " + (invM != null ? invM.objetos.Count : -1) + " de " + (invM != null ? invM.capacidad : -1));
+            if (pcM != null) { pcM.CambiarArma(1); logM.AppendLine("Cambiar arma → " + (pcM.TieneArma ? pcM.NombreArma : "manos")); }
+            if (uiM != null)
+            {
+                MethodInfo abrirM = typeof(InventoryUI).GetMethod("Abrir", BindingFlags.Instance | BindingFlags.NonPublic);
+                abrirM?.Invoke(uiM, null);
+                yield return new WaitForSecondsRealtime(1f);
+                yield return Foto("60_maletin_con_objetos");
+                MethodInfo cerrarM = typeof(InventoryUI).GetMethod("Cerrar", BindingFlags.Instance | BindingFlags.NonPublic);
+                cerrarM?.Invoke(uiM, null);
+            }
+            System.IO.File.WriteAllText(System.IO.Path.Combine(Carpeta, "prueba_maletin.txt"), logM.ToString());
+        }
+
         // Los monstruos: idle, caminar, ataque y susto
         Ir(pm, Mundo.EnSuelo(inicio + Vector3.right * 3f, 0.1f), inicio + Vector3.right * 3f + Vector3.forward * 10f);
         yield return new WaitForSecondsRealtime(1.5f);

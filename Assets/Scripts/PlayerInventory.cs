@@ -25,9 +25,14 @@ public class PlayerInventory : MonoBehaviour
         return n;
     }
 
+    /// <summary>Para cuando cambia el contenido de una casilla (p. ej. "Llaves 3/5").</summary>
+    public void Avisar() => OnChanged?.Invoke();
+
+    public bool Contiene(ItemDefinition item) => objetos.Contains(item);
+
     public bool Agregar(ItemDefinition item)
     {
-        if (objetos.Count >= capacidad) return false;
+        if (item == null || objetos.Contains(item) || objetos.Count >= capacidad) return false;
 
         objetos.Add(item);
         OnChanged?.Invoke();

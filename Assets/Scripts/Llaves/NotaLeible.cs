@@ -20,14 +20,8 @@ public class NotaLeible : MonoBehaviour, IInteractable
         StartCoroutine(DocumentoUI.Mostrar(titulo, texto));
         if (Leida) return;
         Leida = true;
-        PlayerInventory inv = InventarioUtil.Inventario;
-        if (inv != null && InventarioUtil.TieneMochila)
-        {
-            if (inv.objetos.Count >= inv.capacidad) inv.capacidad++;
-            ItemDefinition it = InventarioUtil.Crear(titulo, ItemDefinition.Tipo.Nota, "Nota", "Una nota. Ábrela en el maletín para volver a leerla.");
-            it.texto = texto;
-            inv.Agregar(it);
-        }
+        InventarioUtil.GuardarNota(titulo, texto);   // casilla "Notas (n)" del maletín
+        if (InventarioUtil.TieneMochila) DialogoUI.Susurrar("", "Nota guardada en el maletín  [Y]", 2.5f);
         Light l = GetComponentInChildren<Light>();
         if (l != null) l.enabled = false;
         AlLeer?.Invoke(this);

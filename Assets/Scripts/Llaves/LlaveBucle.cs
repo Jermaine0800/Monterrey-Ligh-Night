@@ -88,14 +88,8 @@ public class LlaveBucle : MonoBehaviour, IInteractable
 
         if (LlavesBucle.Instancia != null) LlavesBucle.Instancia.Sumar();
         int n = LlavesBucle.Instancia != null ? LlavesBucle.Instancia.Llaves : 0;
-        PlayerInventory inv = InventarioUtil.Inventario;
-        if (inv != null)
-        {
-            if (inv.objetos.Count >= inv.capacidad) inv.capacidad++;   // las llaves siempre caben
-            inv.Agregar(InventarioUtil.Crear("Llave " + n + " de " + LlavesBucle.Total, ItemDefinition.Tipo.Llave, "Llave",
-                "Una de las cinco llaves de la puerta del bucle. " + (string.IsNullOrEmpty(frase) ? "" : frase)));
-        }
-        DialogoUI.Susurrar("", string.IsNullOrEmpty(frase) ? "Llave " + n + " de " + LlavesBucle.Total + "." : frase, 3.5f);
+        InventarioUtil.ActualizarLlaves(n, LlavesBucle.Total, frase);   // una sola casilla: "Llaves del bucle n/5"
+        DialogoUI.Susurrar("", (string.IsNullOrEmpty(frase) ? "Llave " + n + " de " + LlavesBucle.Total + "." : frase) + "   (guardada en el maletín)", 3.5f);
         gameObject.SetActive(false);
     }
 
