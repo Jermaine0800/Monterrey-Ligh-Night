@@ -32,7 +32,14 @@ public class AcechoDirector : MonoBehaviour
     AudioClip[] pasos, ramas;
     AudioClip respiracion;
 
-    void Awake() { Instancia = this; }
+    void Awake()
+    {
+        Instancia = this;
+        // Los monstruos salían demasiado tarde: ahora la tensión sube el doble de rápido y descansan menos
+        tensionParaSoltarMonstruo = Mathf.Min(tensionParaSoltarMonstruo, 30f);
+        esperaTrasMonstruo = Mathf.Min(esperaTrasMonstruo, 20f);
+        cadaCuantoSenal = Mathf.Min(cadaCuantoSenal, 6f);
+    }
 
     void Start()
     {

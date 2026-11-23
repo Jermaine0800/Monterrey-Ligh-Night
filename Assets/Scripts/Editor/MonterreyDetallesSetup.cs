@@ -46,6 +46,7 @@ public static class MonterreyDetallesSetup
                 case SitioPanteon p: PanteonExtra(p, d); break;
                 case SitioTunel t: Tunel(t); break;
                 case SitioIglesia i: Capilla(i, d); break;
+                case SitioCasa ca: Casa(ca, d); break;
                 case SitioMirador m: Mirador(m, d); break;
             }
         }
@@ -186,6 +187,26 @@ public static class MonterreyDetallesSetup
             Cil(modelo, "Tubo", new Vector3(0, 0.45f, 0), new Vector3(0.05f, 0.45f, 0.05f), fierro);
             danio = 45f; alcance = 1.6f; usos = 8;
             modelo.localRotation = Quaternion.Euler(0, 0, 85f); modelo.localPosition = new Vector3(0, 0.06f, 0);
+        }
+        else if (tipo == "Hacha")
+        {
+            Cil(modelo, "Mango", new Vector3(0, 0.4f, 0), new Vector3(0.04f, 0.4f, 0.04f), madera);
+            Caja(modelo, "Cabeza", new Vector3(0.07f, 0.74f, 0), new Vector3(0.2f, 0.14f, 0.04f), fierro, false);
+            danio = 80f; alcance = 1.6f; usos = 5;
+            modelo.localRotation = Quaternion.Euler(0, 0, 80f); modelo.localPosition = new Vector3(0, 0.06f, 0);
+        }
+        else if (tipo == "Machete")
+        {
+            Cil(modelo, "Mango", new Vector3(0, 0.08f, 0), new Vector3(0.035f, 0.08f, 0.035f), Mat("MangoNegro", new Color(0.06f, 0.05f, 0.05f)));
+            Caja(modelo, "Hoja", new Vector3(0, 0.4f, 0), new Vector3(0.06f, 0.5f, 0.012f), fierro, false);
+            danio = 65f; alcance = 1.5f; usos = 9;
+            modelo.localRotation = Quaternion.Euler(0, 0, 85f); modelo.localPosition = new Vector3(0, 0.04f, 0);
+        }
+        else if (tipo == "Varilla")
+        {
+            Cil(modelo, "Varilla", new Vector3(0, 0.55f, 0), new Vector3(0.025f, 0.55f, 0.025f), fierro);
+            danio = 40f; alcance = 1.9f; usos = 10;
+            modelo.localRotation = Quaternion.Euler(0, 0, 85f); modelo.localPosition = new Vector3(0, 0.04f, 0);
         }
         else // Crucifijo: pega poco pero muchos usos
         {
@@ -359,6 +380,38 @@ public static class MonterreyDetallesSetup
         Botiquin(d, t, 3f, 9f, "Agua");
     }
 
+    static void Casa(SitioCasa s, Transform d)
+    {
+        Transform t = s.transform;
+        Musica(t, MusicaSitio.Tipo.CajaMusical, 0.4f, 30f);
+        Material madera = Mat("Durmiente", new Color(0.18f, 0.13f, 0.09f));
+        // Mecedora que se mece sola en el cuarto de la niña, un cuadro que se ladea, una silla que se arrastra
+        Transform mec = new GameObject("Mecedora").transform;
+        mec.SetParent(d, false); mec.localPosition = new Vector3(-3.4f, 0.38f, 2.3f);
+        Caja(mec, "Asiento", new Vector3(0, 0.45f, 0), new Vector3(0.5f, 0.06f, 0.5f), madera);
+        Caja(mec, "Respaldo", new Vector3(0, 0.85f, -0.24f), new Vector3(0.5f, 0.8f, 0.05f), madera);
+        Caja(mec, "Patin", new Vector3(0, 0.03f, 0), new Vector3(0.5f, 0.05f, 0.8f), madera, false);
+        Embrujar(mec, ObjetoEmbrujado.Movimiento.Mecer, 6f, false, Vector3.forward).rearmar = 6f;
+
+        Transform cuadro = new GameObject("CuadroFamilia").transform;
+        cuadro.SetParent(d, false); cuadro.localPosition = new Vector3(0f, 2.2f, 3.02f);
+        Caja(cuadro, "Marco", Vector3.zero, new Vector3(0.7f, 0.5f, 0.04f), madera, false);
+        Embrujar(cuadro, ObjetoEmbrujado.Movimiento.Ladear, 5f, true, Vector3.right);
+
+        Transform silla = new GameObject("SillaQueSeArrastra").transform;
+        silla.SetParent(d, false); silla.localPosition = new Vector3(0.6f, 0.38f, 0.6f);
+        Caja(silla, "Asiento", new Vector3(0, 0.45f, 0), new Vector3(0.45f, 0.06f, 0.45f), madera);
+        Caja(silla, "Respaldo", new Vector3(0, 0.8f, -0.2f), new Vector3(0.45f, 0.7f, 0.05f), madera);
+        Embrujar(silla, ObjetoEmbrujado.Movimiento.Deslizar, 5f, true, Vector3.left);
+
+        // Recogibles: adentro y en el patio
+        Arma(d, t, 8.0f, 4.2f, "Hacha");                     // junto a la leña
+        ArmaRecogible m = Arma(d, t, -2.6f, -3.6f, "Machete"); // en la cocina
+        m.transform.position += Vector3.up * 0.38f;
+        Curacion v = Botiquin(d, t, 3.4f, 2.3f, "Vendas"); v.transform.position += Vector3.up * 1.0f;   // sobre el buró
+        Botiquin(d, t, -6f, 5f, "Agua");
+    }
+
     static void Mirador(SitioMirador s, Transform d)
     {
         Transform t = s.transform;
@@ -380,5 +433,6 @@ public static class MonterreyDetallesSetup
 
         Botiquin(d, t, -1.5f, -1.8f, "Botiquín");
         Botiquin(d, t, 1.8f, -1.5f, "Agua");
+        Arma(d, t, -2.2f, 0.8f, "Varilla");
     }
 }

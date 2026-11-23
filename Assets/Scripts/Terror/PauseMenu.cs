@@ -50,19 +50,20 @@ public class PauseMenu : MonoBehaviour
         HorrorUI.Estirar(HorrorUI.Rect(grupoComandos));
         string[] filas =
         {
-            "[STICK IZQ]   Caminar   ·  [L3/LB] Correr",
-            "[STICK DER]   Cámara    ·  [R3] 1ª / 3ª persona",
-            "[RB]          Interactuar / esconderse",
-            "[RT]          Golpear",
-            "[B]           Agacharse",
-            "[Y]           Maletín",
-            "[X]           Linterna",
-            "[START]       Pausa",
+            "[STICK IZQ]  Caminar  ·  [L3/LB] Correr        (WASD · Shift)",
+            "[STICK DER]  Mirar  ·  [R3] 1ª / 3ª persona     (Ratón · V)",
+            "[A]          Acción: recoger, leer, esconderse  (E)",
+            "[B]          Agacharse / salir del escondite    (C)",
+            "[X]          Linterna                           (F)",
+            "[Y]          Maletín: curar y equipar armas     (Tab)",
+            "[RT]         Golpear                            (Clic)",
+            "[◀ ▶]        Cambiar arma  ·  [▲] Curarse       (Q/R · H)",
+            "[START]      Pausa                              (Esc)",
         };
         for (int i = 0; i < filas.Length; i++)
         {
             Text f = HorrorUI.CrearTexto(grupoComandos.transform, "F" + i, filas[i], 30, HorrorUI.Hueso);
-            HorrorUI.Colocar(f.rectTransform, new Vector2(0, 1), new Vector2(1000, -420 - i * 50), new Vector2(800, 46));
+            HorrorUI.Colocar(f.rectTransform, new Vector2(0, 1), new Vector2(900, -400 - i * 48), new Vector2(980, 46));
         }
         grupoComandos.SetActive(false);
 

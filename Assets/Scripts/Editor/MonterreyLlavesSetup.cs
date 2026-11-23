@@ -19,7 +19,7 @@ public static class MonterreyLlavesSetup
     const string RutaIglesia = "Assets/Escenarios/PSXChurch/PSX Abandoned Church.fbx";
     const string CarpetaMat = "Assets/Escenarios/Materiales";
 
-    [MenuItem("Monterrey/11. Construir las 5 llaves (campamento, panteón, capilla, túnel, mirador)")]
+    [MenuItem("Monterrey/11. Construir las 5 llaves (campamento, panteón, casa, túnel, mirador)")]
     public static void Construir()
     {
         MonterreyHistoriaSetup.Construir();
@@ -55,18 +55,18 @@ public static class MonterreyLlavesSetup
 
         // ---- Elegir lugares planos, lejos entre sí y de lo que ya existe
         List<Vector3> ocupados = new List<Vector3> { inicio, tunel.transform.position, miradorGO.transform.position };
-        Vector3 pCamp = BuscarPlano(terreno, inicio, 55f, 110f, 7f, ocupados, 50f);
+        Vector3 pCamp = BuscarPlano(terreno, inicio, 85f, 135f, 8f, ocupados, 70f);
         ocupados.Add(pCamp);
-        Vector3 pPant = BuscarPlano(terreno, inicio, 80f, 170f, 13f, ocupados, 60f);
+        Vector3 pPant = BuscarPlano(terreno, inicio, 110f, 190f, 14f, ocupados, 80f);
         ocupados.Add(pPant);
-        Vector3 pIgle = BuscarPlano(terreno, inicio, 90f, 190f, 12f, ocupados, 60f);
+        Vector3 pIgle = BuscarPlano(terreno, inicio, 120f, 210f, 15f, ocupados, 80f);
 
-        QuitarArboles(terreno, new[] { (pCamp, 12f), (pPant, 18f), (pIgle, 16f), (inicio, 8f) });
+        QuitarArboles(terreno, new[] { (pCamp, 16f), (pPant, 22f), (pIgle, 22f), (inicio, 8f) });
 
         // ---- Construir
         SitioCampamento camp = CrearCampamento(raiz.transform, pCamp, inicio);
         SitioPanteon pant = CrearPanteon(raiz.transform, pPant, inicio);
-        SitioIglesia igle = CrearIglesia(raiz.transform, pIgle, inicio);
+        SitioCasa igle = CrearCasa(raiz.transform, pIgle, inicio);
         SitioTunel stun = PrepararTunel(tunel, inicio);
         SitioMirador smir = PrepararMirador(miradorGO, inicio);
         PuertaBucle puerta = CrearPuertaBucle(raiz.transform, inicio, pm.transform.forward);
@@ -77,7 +77,7 @@ public static class MonterreyLlavesSetup
 
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         Debug.Log($"[Monterrey] 5 llaves listas. Campamento {D(inicio, pCamp)} m, Panteón {D(inicio, pPant)} m, Túnel {D(inicio, tunel.transform.position)} m, " +
-                  $"Capilla {D(inicio, pIgle)} m, Mirador {D(inicio, miradorGO.transform.position)} m.");
+                  $"Casa {D(inicio, pIgle)} m, Mirador {D(inicio, miradorGO.transform.position)} m.");
     }
 
     static int D(Vector3 a, Vector3 b) { a.y = b.y = 0; return Mathf.RoundToInt(Vector3.Distance(a, b)); }
@@ -278,7 +278,7 @@ public static class MonterreyLlavesSetup
         Caja(g.transform, "Vastago", new Vector3(0, -0.04f, 0), new Vector3(0.025f, 0.22f, 0.02f), oro, false);
         Caja(g.transform, "Diente1", new Vector3(0.03f, -0.12f, 0), new Vector3(0.05f, 0.025f, 0.02f), oro, false);
         Caja(g.transform, "Diente2", new Vector3(0.025f, -0.07f, 0), new Vector3(0.04f, 0.02f, 0.02f), oro, false);
-        Luz(g.transform, "Brillo", new Vector3(0, 0, -0.2f), new Color(1f, 0.85f, 0.5f), 3f, 1.4f, true);
+        Luz(g.transform, "Brillo", new Vector3(0, 0, -0.2f), new Color(1f, 0.85f, 0.5f), 5f, 2f, true);
         g.transform.localScale = Vector3.one * 1.6f;
         BoxCollider bc = g.AddComponent<BoxCollider>();
         bc.isTrigger = true; bc.size = new Vector3(0.35f, 0.45f, 0.35f);
@@ -367,7 +367,7 @@ public static class MonterreyLlavesSetup
         Luz(radio, "LedRadio", new Vector3(0, 0, -0.8f), new Color(1f, 0.1f, 0.05f), 1.2f, 1f, true);
 
         // Llave escondida: solo con la linterna
-        LlaveBucle llave = CrearLlave(s, "Llave1_Campamento", W(s, 3.2f, -4.6f) + Vector3.up * 0.25f, true, "Llave 1 de 5. Estaba junto a una bota... sin dueño.");
+        LlaveBucle llave = CrearLlave(s, "Llave1_Campamento", W(s, 3.2f, -4.6f) + Vector3.up * 0.6f, false, "Llave 1 de 5. Estaba junto a una bota... sin dueño.");
 
         SitioCampamento sitio = s.gameObject.AddComponent<SitioCampamento>();
         sitio.nombreLugar = "Campamento";
@@ -621,6 +621,150 @@ public static class MonterreyLlavesSetup
         sitio.puntoVigia = PuntoVigia(s, inicio, largo / 2f + 7f);
         sitio.radioLlegada = largo / 2f + 2f;
         return sitio;
+    }
+
+    // ================================================================== LLAVE 4: Casa abandonada (antes capilla)
+    const string RutaCasa = "Assets/ALP_Assets/country house01/Prefabs/House_Prefab.prefab";
+
+    /// <summary>
+    /// Casa de campo abandonada con 5 cuartos + pasillo + patio. Coordenadas locales de la casa (entrada hacia +Z = hacia donde vienes):
+    /// Pasillo (0, 4.7) · Sala (0, 1.4) · Cuarto niña (-4.3, 1.1) · Cocina/comedor (-0.7, -2.4) · Recámara grande (4.4, -0.6) · Cuarto del fondo (-5.3, -2.7).
+    /// </summary>
+    static SitioCasa CrearCasa(Transform raiz, Vector3 pos, Vector3 inicio)
+    {
+        Transform s = NuevoSitio(raiz, "Sitio4_Casa", pos, inicio);
+        GameObject pf = AssetDatabase.LoadAssetAtPath<GameObject>(RutaCasa);
+        GameObject casa = pf != null ? (GameObject)PrefabUtility.InstantiatePrefab(pf) : new GameObject("Casa_FALTA");
+        if (pf != null) PrefabUtility.UnpackPrefabInstance(casa, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+        casa.name = "CasaGarza";
+        casa.transform.SetParent(s, false);
+        casa.transform.localPosition = new Vector3(0, -0.08f, 0);
+        casa.transform.localRotation = Quaternion.identity;
+        float piso = 0.38f;   // altura del piso interior (local del sitio)
+
+        // Escalones de la entrada (el piso de la casa está a ~40 cm)
+        Material madera = Mat("Durmiente", null, new Color(0.2f, 0.14f, 0.09f));
+        Material maderaClara = Mat("MaderaVieja", null, new Color(0.32f, 0.24f, 0.16f));
+        Material tela = Mat("TelaVieja", null, new Color(0.35f, 0.3f, 0.26f));
+        Caja(s, "Escalon1", new Vector3(0, 0.12f, 7.3f), new Vector3(2.2f, 0.24f, 0.5f), madera);
+        Caja(s, "Escalon2", new Vector3(0, 0.26f, 6.85f), new Vector3(2.2f, 0.24f, 0.5f), madera);
+
+        // Puerta principal: se azota al tomar la llave
+        PuertaBisagra puerta = null;
+        Transform pPuerta = casa.transform.Find("Doors/Door04_pr");
+        if (pPuerta != null)
+        {
+            pPuerta.localRotation = Quaternion.Euler(0, 80f, 0);    // cerrada
+            puerta = pPuerta.gameObject.AddComponent<PuertaBisagra>();
+            puerta.anguloAbierta = -90f; puerta.abiertaAlInicio = true; puerta.duracion = 1.2f;
+        }
+
+        // ---- Recámara grande (4.4, -0.6): cama, ropero = escondite, buró
+        Transform cama = Caja(s, "Cama", new Vector3(4.6f, piso + 0.45f, 1.4f), new Vector3(1.5f, 0.12f, 2.1f), tela);
+        Caja(s, "CamaPata1", new Vector3(3.95f, piso + 0.2f, 0.45f), new Vector3(0.08f, 0.4f, 0.08f), madera, false);
+        Caja(s, "CamaPata2", new Vector3(5.25f, piso + 0.2f, 0.45f), new Vector3(0.08f, 0.4f, 0.08f), madera, false);
+        Caja(s, "CamaPata3", new Vector3(3.95f, piso + 0.2f, 2.35f), new Vector3(0.08f, 0.4f, 0.08f), madera, false);
+        Caja(s, "CamaPata4", new Vector3(5.25f, piso + 0.2f, 2.35f), new Vector3(0.08f, 0.4f, 0.08f), madera, false);
+        Caja(s, "Cabecera", new Vector3(4.6f, piso + 0.8f, 2.48f), new Vector3(1.6f, 1f, 0.08f), madera);
+        Escondite bajoCama = CrearEscondite(s, "Escondite_BajoCama", s.TransformPoint(new Vector3(4.6f, piso, 1.4f)), new Vector3(1.8f, 1f, 2.4f), "debajo de la cama");
+        bajoCama.puntoSalida = Punto(bajoCama.transform, s.TransformPoint(new Vector3(3.3f, piso, 1.4f)));
+
+        // Ropero contra la pared derecha, con las puertas hacia el cuarto
+        Vector3 ro = new Vector3(6.2f, piso, -2.6f);
+        Caja(s, "Ropero_Fondo", ro + new Vector3(0.35f, 1.05f, 0), new Vector3(0.06f, 2.1f, 1.3f), madera);
+        Caja(s, "Ropero_Lado1", ro + new Vector3(0, 1.05f, 0.65f), new Vector3(0.7f, 2.1f, 0.06f), madera);
+        Caja(s, "Ropero_Lado2", ro + new Vector3(0, 1.05f, -0.65f), new Vector3(0.7f, 2.1f, 0.06f), madera);
+        Caja(s, "Ropero_Techo", ro + new Vector3(0, 2.12f, 0), new Vector3(0.72f, 0.06f, 1.36f), madera, false);
+        Caja(s, "Ropero_PuertaA", ro + new Vector3(-0.36f, 1.05f, 0.33f), new Vector3(0.04f, 2.0f, 0.62f), maderaClara, false);
+        Caja(s, "Ropero_PuertaB", ro + new Vector3(-0.36f, 1.05f, -0.33f), new Vector3(0.04f, 2.0f, 0.62f), maderaClara, false);
+        Escondite ropero = CrearEscondite(s, "Escondite_Ropero", s.TransformPoint(ro), new Vector3(1.4f, 2.1f, 1.5f), "el ropero");
+        ropero.puntoSalida = Punto(ropero.transform, s.TransformPoint(ro + new Vector3(-1.2f, 0, 0)));
+        Caja(s, "Buro", new Vector3(3.6f, piso + 0.3f, 2.3f), new Vector3(0.45f, 0.6f, 0.4f), madera);
+
+        // ---- Comedor/cocina (-0.7, -2.4): la mesa puesta
+        Caja(s, "Mesa", new Vector3(-0.8f, piso + 0.75f, -2.4f), new Vector3(2f, 0.08f, 1f), madera);
+        for (int i = -1; i <= 1; i += 2)
+            for (int j = -1; j <= 1; j += 2)
+            {
+                Caja(s, "MesaPata", new Vector3(-0.8f + i * 0.9f, piso + 0.37f, -2.4f + j * 0.42f), new Vector3(0.07f, 0.74f, 0.07f), madera, false);
+                Caja(s, "Silla", new Vector3(-0.8f + i * 0.5f, piso + 0.45f, -2.4f + j * 0.85f), new Vector3(0.42f, 0.06f, 0.42f), madera);
+                Caja(s, "Plato", new Vector3(-0.8f + i * 0.5f, piso + 0.8f, -2.4f + j * 0.28f), new Vector3(0.24f, 0.015f, 0.24f), Mat("Plato", null, new Color(0.8f, 0.78f, 0.72f)), false);
+            }
+        Caja(s, "Alacena", new Vector3(-3.4f, piso + 0.9f, -4.0f), new Vector3(1.4f, 1.8f, 0.45f), madera);
+
+        // ---- Cuarto de la niña (-4.3, 1.1): cuna y mecedora
+        Caja(s, "Cuna", new Vector3(-5.2f, piso + 0.5f, 2.2f), new Vector3(1.1f, 0.06f, 0.65f), maderaClara);
+        for (int i = 0; i < 6; i++) Caja(s, "CunaBarrote", new Vector3(-5.7f + i * 0.2f, piso + 0.75f, 2.52f), new Vector3(0.03f, 0.5f, 0.03f), maderaClara, false);
+        Caja(s, "Muneca", new Vector3(-5.1f, piso + 0.62f, 2.15f), new Vector3(0.14f, 0.22f, 0.1f), Mat("Muneca", null, new Color(0.75f, 0.62f, 0.55f)), false);
+
+        // ---- Cuarto del fondo (-5.3, -2.7): la llave, sobre un tocador
+        Caja(s, "Tocador", new Vector3(-5.4f, piso + 0.42f, -3.75f), new Vector3(1.1f, 0.84f, 0.45f), madera);
+        Caja(s, "Espejo", new Vector3(-5.4f, piso + 1.35f, -3.95f), new Vector3(0.7f, 0.9f, 0.03f), Mat("Espejo", null, new Color(0.5f, 0.55f, 0.6f)), false);
+        LlaveBucle llave = CrearLlave(s, "Llave4_Casa", s.TransformPoint(new Vector3(-5.4f, piso + 1.15f, -3.65f)), false, "Llave 4 de 5. Estaba frente al espejo. En el reflejo había alguien más.");
+
+        // ---- Focos: luz tenue en cada cuarto (se van al tomar la llave)
+        List<Light> focos = new List<Light>
+        {
+            Luz(s, "Foco_Pasillo", new Vector3(0, piso + 2.9f, 4.8f), new Color(1f, 0.8f, 0.55f), 5f, 0.9f, true),
+            Luz(s, "Foco_Sala", new Vector3(0, piso + 2.9f, 1.4f), new Color(1f, 0.8f, 0.55f), 5f, 0.7f, true),
+            Luz(s, "Foco_Comedor", new Vector3(-0.8f, piso + 2.6f, -2.4f), new Color(1f, 0.75f, 0.5f), 5f, 0.9f, true),
+            Luz(s, "Foco_Recamara", new Vector3(4.4f, piso + 2.9f, -0.6f), new Color(1f, 0.8f, 0.55f), 6f, 0.6f, true),
+            Luz(s, "Foco_Ninia", new Vector3(-4.3f, piso + 2.9f, 1.1f), new Color(0.7f, 0.8f, 1f), 5f, 0.5f, true),
+            Luz(s, "Foco_Fondo", new Vector3(-5.3f, piso + 2.6f, -2.7f), new Color(1f, 0.5f, 0.35f), 4f, 0.8f, true),
+        };
+        Luz(s, "LuzPorche", new Vector3(0, 2.8f, 7.6f), new Color(0.6f, 0.7f, 1f), 9f, 1.2f, true);
+
+        // ---- Patio: cerca rota, tendedero, leña, pozo
+        Material cerca = Mat("CercaVieja", null, new Color(0.26f, 0.2f, 0.14f));
+        for (int i = 0; i < 26; i++)
+        {
+            float a = i / 26f * Mathf.PI * 2f;
+            if (Mathf.Abs(Mathf.DeltaAngle(a * Mathf.Rad2Deg, 0f)) < 18f) continue;   // hueco de la entrada (+Z)
+            if (i % 7 == 3) continue;                                               // tablas caídas
+            Vector3 lp = new Vector3(Mathf.Sin(a) * 13f, 0, Mathf.Cos(a) * 11f);
+            Vector3 w = Mundo.EnSuelo(s.TransformPoint(lp));
+            Transform poste = Caja(s, "Cerca", s.InverseTransformPoint(w) + Vector3.up * 0.55f, new Vector3(0.1f, 1.1f, 0.1f), cerca);
+            poste.localRotation = Quaternion.Euler(Random.Range(-8f, 8f), 0, Random.Range(-8f, 8f));
+        }
+        Transform pozo = new GameObject("Pozo").transform; pozo.SetParent(s, false);
+        pozo.position = W(s, -9f, -6f);
+        for (int i = 0; i < 8; i++)
+        {
+            float a = i * 45f * Mathf.Deg2Rad;
+            Caja(pozo, "Piedra", new Vector3(Mathf.Cos(a) * 0.7f, 0.35f, Mathf.Sin(a) * 0.7f), new Vector3(0.55f, 0.7f, 0.3f), Mat("Piedra", null, new Color(0.35f, 0.34f, 0.32f))).localRotation = Quaternion.Euler(0, -i * 45f + 90f, 0);
+        }
+        Transform lena = new GameObject("Lena").transform; lena.SetParent(s, false); lena.position = W(s, 8.5f, 5f);
+        for (int i = 0; i < 9; i++) Caja(lena, "Tronco", new Vector3((i % 3) * 0.25f - 0.25f, 0.12f + (i / 3) * 0.22f, 0), new Vector3(0.22f, 0.22f, 1f), madera);
+        Transform tendedero = new GameObject("Tendedero").transform; tendedero.SetParent(s, false); tendedero.position = W(s, -8f, 4f);
+        Caja(tendedero, "Poste1", new Vector3(-2f, 1f, 0), new Vector3(0.08f, 2f, 0.08f), madera);
+        Caja(tendedero, "Poste2", new Vector3(2f, 1f, 0), new Vector3(0.08f, 2f, 0.08f), madera);
+        Caja(tendedero, "Cuerda", new Vector3(0, 1.85f, 0), new Vector3(4f, 0.02f, 0.02f), madera, false);
+        Material sabana = Mat("Sabana", null, new Color(0.75f, 0.72f, 0.65f), true);
+        Transform sab = Caja(tendedero, "Sabana", new Vector3(0.4f, 1.3f, 0), new Vector3(1.4f, 1.1f, 0.02f), sabana, false);
+        ObjetoEmbrujado ob = sab.gameObject.AddComponent<ObjetoEmbrujado>();
+        ob.movimiento = ObjetoEmbrujado.Movimiento.Mecer; ob.radio = 10f; ob.soloSinVerlo = false; ob.direccion = Vector3.forward; ob.rearmar = 8f;
+
+        Transform entrada = new GameObject("EntradaMonstruo").transform;
+        entrada.SetParent(s, false);
+        entrada.localPosition = new Vector3(0, 0, 14f);
+
+        SitioCasa sitio = s.gameObject.AddComponent<SitioCasa>();
+        sitio.nombreLugar = "Casa";
+        sitio.llave = llave;
+        sitio.puerta = puerta;
+        sitio.focos = focos.ToArray();
+        sitio.entradaMonstruo = entrada;
+        sitio.puntoVigia = PuntoVigia(s, inicio, 17f);
+        sitio.radioLlegada = 11f;
+        return sitio;
+    }
+
+    static Transform Punto(Transform padre, Vector3 mundo)
+    {
+        Transform t = new GameObject("PuntoSalida").transform;
+        t.SetParent(padre, true);
+        t.position = mundo;
+        return t;
     }
 
     static Material MatIglesia(Material original, int i)

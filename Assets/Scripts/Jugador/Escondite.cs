@@ -15,7 +15,29 @@ public class Escondite : MonoBehaviour, IInteractable
     public Transform puntoSalida;
     public string nombre = "arbusto";
 
+    [Tooltip("Altura de los ojos escondido (sobre el suelo). -1 = automática según el tipo")]
+    public float alturaOjos = -1f;
+
     public bool Ocupado { get; private set; }
+
+    /// <summary>¿Es un mueble con rendijas (casillero, ropero, armario)? Cambia la vista desde dentro.</summary>
+    public bool EsMueble
+    {
+        get { string n = nombre.ToLowerInvariant(); return n.Contains("casillero") || n.Contains("ropero") || n.Contains("armario") || n.Contains("closet") || n.Contains("locker"); }
+    }
+
+    public float AlturaOjos
+    {
+        get
+        {
+            if (alturaOjos > 0f) return alturaOjos;
+            string n = nombre.ToLowerInvariant();
+            if (EsMueble) return 1.5f;
+            if (n.Contains("cama") || n.Contains("mesa")) return 0.35f;
+            if (n.Contains("tronco") || n.Contains("tumba") || n.Contains("cripta")) return 0.6f;
+            return 0.7f;   // arbustos y demás
+        }
+    }
 
     public Vector3 PosicionDentro => puntoDentro != null ? puntoDentro.position : transform.position;
     public Vector3 PosicionSalida => puntoSalida != null ? puntoSalida.position : transform.position + transform.forward * 1.5f;

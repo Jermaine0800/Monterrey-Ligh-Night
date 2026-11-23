@@ -101,6 +101,60 @@ public static class HorrorInput
     /// <summary>Cambiar primera / tercera persona: R3 o V.</summary>
     public static bool CambiarCamara => (Gamepad.current != null && Gamepad.current.rightStickButton.wasPressedThisFrame) || Tecla(Key.V, Key.V);
 
+    // ------------------------------------------------------------------ Esquema estándar (Xbox / PC)
+    // A = acción (interactuar, recoger, esconderse, leer)   ·  B = agacharse / atrás / salir del escondite
+    // X = linterna  ·  Y = maletín  ·  RT = golpear  ·  L3 o LB = correr  ·  R3 = cámara
+    // Cruceta ◀ ▶ = cambiar arma  ·  Cruceta ▲ = curarse rápido  ·  Start = pausa
+    // Teclado: WASD, ratón, E acción, Shift correr, C/Ctrl agacharse, F linterna, Tab maletín,
+    //          clic izq. golpear, Q / R cambiar arma, H curarse, V cámara, Esc pausa.
+
+    /// <summary>Acción contextual: A (estándar) o RB / E.</summary>
+    public static bool Interactuar => (Gamepad.current != null && (Gamepad.current.buttonSouth.wasPressedThisFrame || Gamepad.current.rightShoulder.wasPressedThisFrame)) || Tecla(Key.E, Key.Enter);
+    /// <summary>Salir del escondite: A, B o E.</summary>
+    public static bool SalirEscondite => Interactuar || Agacharse;
+    public static bool ArmaSiguiente => (Gamepad.current != null && Gamepad.current.dpad.right.wasPressedThisFrame) || Tecla(Key.R, Key.Digit2);
+    public static bool ArmaAnterior => (Gamepad.current != null && Gamepad.current.dpad.left.wasPressedThisFrame) || Tecla(Key.Q, Key.Digit1);
+    public static bool CurarRapido => (Gamepad.current != null && Gamepad.current.dpad.up.wasPressedThisFrame) || Tecla(Key.H, Key.H);
+
+    static bool ultimoFueControl;
+    /// <summary>¿El jugador está usando el control (true) o el teclado (false)? Para mostrar el botón correcto.</summary>
+    public static bool UsandoControl
+    {
+        get
+        {
+            var gp = Gamepad.current;
+            if (gp != null && (gp.wasUpdatedThisFrame && (gp.leftStick.ReadValue().sqrMagnitude > 0.1f || gp.buttonSouth.isPressed || gp.rightStick.ReadValue().sqrMagnitude > 0.1f))) ultimoFueControl = true;
+            if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame) ultimoFueControl = false;
+            if (gp == null) ultimoFueControl = false;
+            return ultimoFueControl;
+        }
+    }
+
+    /// <summary>Etiqueta del botón para una acción, según el dispositivo en uso.</summary>
+    public static string Boton(string accion)
+    {
+        bool c = UsandoControl;
+        switch (accion)
+        {
+            case "accion": return c ? "A" : "E";
+            case "linterna": return c ? "X" : "F";
+            case "maletin": return c ? "Y" : "Tab";
+            case "golpe": return c ? "RT" : "Clic";
+            case "agacharse": return c ? "B" : "C";
+            case "arma": return c ? "◀ ▶" : "Q / R";
+            case "curar": return c ? "▲" : "H";
+            default: return accion;
+        }
+    }
+
+    /// <summary>Cambia los botones escritos en un texto ([RB], [X]...) por los del dispositivo en uso.</summary>
+    public static string Traducir(string t)
+    {
+        if (string.IsNullOrEmpty(t)) return t;
+        return t.Replace("[RB]", "[" + Boton("accion") + "]").Replace("[X]", "[" + Boton("linterna") + "]")
+                .Replace("[Y]", "[" + Boton("maletin") + "]").Replace("[RT]", "[" + Boton("golpe") + "]");
+    }
+
     /// <summary>Texto del estado del control (para el menú).</summary>
     public static string EstadoControl()
     {

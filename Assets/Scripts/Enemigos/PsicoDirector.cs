@@ -27,7 +27,8 @@ public class PsicoDirector : MonoBehaviour
 
     void Start()
     {
-        siguiente = Time.time + 60f;   // el primer minuto, calma
+        siguiente = Time.time + 25f;   // poca calma: a los 25 s empieza lo raro
+        esperaMin = Mathf.Min(esperaMin, 18f); esperaMax = Mathf.Min(esperaMax, 40f);
         monstruos.AddRange(FindObjectsByType<EnemigoBase>(FindObjectsInactive.Include));
         GameObject g = new GameObject("FuentePsico");
         g.transform.SetParent(transform);

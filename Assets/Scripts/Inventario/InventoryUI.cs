@@ -69,6 +69,7 @@ public class InventoryUI : MonoBehaviour
     {
         int capacidad = inventario != null ? inventario.capacidad : 6;
         filas = Mathf.Max(2, Mathf.CeilToInt(capacidad / (float)columnas));
+        if (filas > 2) tamanoCelda = Mathf.Min(tamanoCelda, 520f / filas);   // que quepa todo en pantalla
 
         Canvas c = HorrorUI.CrearCanvas("Maletin_Canvas", 300);
         raiz = c.gameObject;
@@ -200,7 +201,7 @@ public class InventoryUI : MonoBehaviour
         descItem.horizontalOverflow = HorizontalWrapMode.Wrap;
         HorrorUI.Colocar(descItem.rectTransform, new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(1000, 90));
 
-        Text ayuda = HorrorUI.CrearTexto(r, "Ayuda", "[✚] MOVER     [LB / RB] CASILLA     [B] CERRAR", 22, HorrorUI.HuesoTenue, TextAnchor.MiddleRight);
+        Text ayuda = HorrorUI.CrearTexto(r, "Ayuda", "[A / E] USAR · EQUIPAR · LEER      [✚ / WASD] MOVER      [B / Tab] CERRAR", 22, HorrorUI.HuesoTenue, TextAnchor.MiddleRight);
         HorrorUI.Colocar(ayuda.rectTransform, new Vector2(1, 0), new Vector2(-70, 110), new Vector2(900, 30));
     }
 
@@ -260,6 +261,7 @@ public class InventoryUI : MonoBehaviour
         ecg.uvRect = new Rect(Time.unscaledTime * 0.35f, 0, 1.5f, 1);
 
         if (HorrorInput.Inventario || HorrorInput.Cancelar) { Cerrar(); return; }
+        if (HorrorInput.Aceptar || (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.eKey.wasPressedThisFrame)) { UsarSeleccionado(); return; }
 
         int antes = sel;
         int total = celdas.Count;
@@ -308,10 +310,50 @@ public class InventoryUI : MonoBehaviour
         }
         textoObjetivo.text = "◆  " + Objetivo;
 
-        textoCondicion.text = "Bien";
-        textoCondicion.color = HorrorUI.VerdeMonitor;
+        // Condición estilo Resident Evil: Bien / Precaución / Peligro según la vida
+        SaludJugador salud = FindAnyObjectByType<SaludJugador>();
+        float v = salud != null ? salud.Vida01 : 1f;
+        textoCondicion.text = v > 0.66f ? "Bien" : v > 0.33f ? "Precaución" : "Peligro";
+        textoCondicion.color = v > 0.66f ? HorrorUI.VerdeMonitor : v > 0.33f ? new Color(0.95f, 0.75f, 0.2f) : HorrorUI.Sangre;
+        ecg.color = textoCondicion.color;
+        PlayerCombate pc = FindAnyObjectByType<PlayerCombate>();
+        for (int i = 0; i < etiquetas.Count; i++)
+        {
+            ItemDefinition it = i < inventario.objetos.Count ? inventario.objetos[i] : null;
+            if (it != null && pc != null && pc.ArmaActual == it) etiquetas[i].text = "\n\n\nEQUIPADA";
+            else if (it != null && it.tipo == ItemDefinition.Tipo.Arma) etiquetas[i].text = "\n\n\n" + it.usos + " golpes";
+        }
 
         MostrarSeleccion();
+    }
+
+    /// <summary>A / E sobre una casilla: curarse, equipar el arma, releer la nota.</summary>
+    void UsarSeleccionado()
+    {
+        ItemDefinition it = inventario != null && sel < inventario.objetos.Count ? inventario.objetos[sel] : null;
+        if (it == null) return;
+        PlayerCombate pc = FindAnyObjectByType<PlayerCombate>();
+        switch (it.tipo)
+        {
+            case ItemDefinition.Tipo.Curacion:
+                SaludJugador s = FindAnyObjectByType<SaludJugador>();
+                if (s != null && s.Vida01 >= 0.999f) { descItem.text = "Tu condición es buena. Guárdalo para después."; return; }
+                inventario.Quitar(it);
+                if (s != null) Curacion.Usar(s.gameObject, it.valor);
+                src.PlayOneShot(golpe, 0.4f);
+                break;
+            case ItemDefinition.Tipo.Arma:
+                if (pc != null) pc.Equipar(pc.ArmaActual == it ? null : it);
+                Refrescar();
+                break;
+            case ItemDefinition.Tipo.Nota:
+                Cerrar();
+                if (FindAnyObjectByType<SaludJugador>() is MonoBehaviour mb) mb.StartCoroutine(DocumentoUI.Mostrar(it.nombre, it.texto));
+                break;
+            default:
+                descItem.text = it.descripcion;
+                break;
+        }
     }
 
     void MostrarSeleccion()

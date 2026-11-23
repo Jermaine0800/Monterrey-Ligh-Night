@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// </summary>
 public class MapaRadial : MonoBehaviour
 {
-    public float radioMundo = 160f;      // metros que caben del centro a la orilla
+    public float radioMundo = 240f;      // metros que caben del centro a la orilla
     public float tamano = 250f;          // píxeles (en 1920x1080)
 
     RectTransform marco, contenido;
@@ -23,6 +23,7 @@ public class MapaRadial : MonoBehaviour
 
     void Start()
     {
+        radioMundo = Mathf.Max(radioMundo, 240f);   // los lugares ahora están más separados
         Canvas c = HorrorUI.CrearCanvas("Mapa_Canvas", 122, transform);
 
         // Marco circular con máscara

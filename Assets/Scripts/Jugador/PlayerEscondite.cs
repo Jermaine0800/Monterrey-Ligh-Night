@@ -20,6 +20,9 @@ public class PlayerEscondite : MonoBehaviour
     AudioSource respiracion;
     float puedeSalir;
     bool estabaEnPrimera;
+    Renderer[] cuerpo;
+    CharacterController cc;
+    GameObject vista;
 
     void Awake()
     {
@@ -56,15 +59,27 @@ public class PlayerEscondite : MonoBehaviour
             movimiento.enabled = false;
         }
 
+        // El cuerpo desaparece por completo (antes se asomaba medio cuerpo fuera del arbusto)
+        cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+        transform.position = e.PosicionDentro;
+        cuerpo = GetComponentsInChildren<Renderer>();
+        foreach (Renderer r in cuerpo) if (r != null && !(r is ParticleSystemRenderer)) r.enabled = false;
+
         cam = FindFirstObjectByType<CameraController>();
         if (cam != null)
         {
             estabaEnPrimera = cam.EnPrimeraPersona;
             cam.ForzarPrimeraPersona(true);
+            Vector3 fuera = e.PosicionSalida - e.PosicionDentro; fuera.y = 0;
+            float yaw = fuera.sqrMagnitude > 0.01f ? Mathf.Atan2(fuera.x, fuera.z) * Mathf.Rad2Deg : transform.eulerAngles.y;
+            Vector3 ojo = e.PosicionDentro + Vector3.up * e.AlturaOjos + (fuera.sqrMagnitude > 0.01f ? fuera.normalized * 0.15f : Vector3.zero);
+            cam.FijarOjos(ojo, yaw, e.EsMueble ? 35f : 70f);
         }
+        vista = VistaEscondite.Crear(e.EsMueble);
         AnimarEscondido(true);
         respiracion.Play();
-        DialogoUI.Susurrar("", "Escondido en " + e.nombre + "   [RB] salir", 3f);
+        DialogoUI.Susurrar("", "Escondido en " + e.nombre + "  ·  no hagas ruido.   [A / E] salir", 3.5f);
         yield break;
     }
 
@@ -72,7 +87,7 @@ public class PlayerEscondite : MonoBehaviour
     {
         if (!Escondido) return;
         respiracion.volume = Mathf.MoveTowards(respiracion.volume, 0.25f, Time.deltaTime * 0.3f);
-        if (HorrorGameState.PuedeJugar && Time.time > puedeSalir && (HorrorInput.RB || HorrorInput.Agacharse)) Salir();
+        if (HorrorGameState.PuedeJugar && Time.time > puedeSalir && HorrorInput.SalirEscondite) Salir();
     }
 
     void AnimarEscondido(bool v)
@@ -95,6 +110,10 @@ public class PlayerEscondite : MonoBehaviour
         AnimarEscondido(false);
         respiracion.volume = 0f;
         respiracion.Stop();
+        if (vista != null) Destroy(vista);
+        if (cuerpo != null) foreach (Renderer r in cuerpo) if (r != null) r.enabled = true;
+        if (cc != null) cc.enabled = true;
+        if (cam != null) cam.SoltarOjos();
         if (Actual != null)
         {
             Actual.Marcar(false);

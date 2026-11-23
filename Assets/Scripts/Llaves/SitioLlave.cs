@@ -15,6 +15,14 @@ public abstract class SitioLlave : MonoBehaviour
     public Transform puntoVigia;
     public float radioLlegada = 14f;
 
+    [Header("Notas (siempre dos, juntas)")]
+    [Tooltip("Pistas de ayer: tu propia letra, de un bucle anterior")]
+    public NotaLeible notaAyer;
+    [Tooltip("De alguien que ya estuvo en el bucle: qué hacer para conseguir la llave")]
+    public NotaLeible notaBucle;
+    [Tooltip("Segundos dentro del lugar antes de que algo aparezca aunque no leas las notas")]
+    public float esperaMonstruo = 240f;
+
     public bool Completado { get; protected set; }
 
     /// <summary>Lo que dice el Vigía cuando te manda hacia acá (al terminar el lugar anterior).</summary>
@@ -46,6 +54,7 @@ public abstract class SitioLlave : MonoBehaviour
 
         SaludJugador s = h.Jugador.GetComponent<SaludJugador>();
         if (s != null) s.GuardarPuntoControl();
+        h.StartCoroutine(Presencia(h));
 
         // 3) El reto propio del lugar
         yield return Reto(h);
@@ -72,5 +81,39 @@ public abstract class SitioLlave : MonoBehaviour
     protected void SoltarMonstruo(Vector3 cerca)
     {
         if (AcechoDirector.Instancia != null) AcechoDirector.Instancia.ForzarEn(cerca);
+    }
+
+    /// <summary>
+    /// Al entrar al lugar: las dos notas brillan. Cuando las lees (o pasan ~4 minutos) algo se hace presente:
+    /// lo ves y te sigue.
+    /// </summary>
+    IEnumerator Presencia(MisionManager h)
+    {
+        if (notaAyer != null && !notaAyer.Leida)
+            DialogoUI.Susurrar("", "Hay dos hojas juntas ahí... con mi letra.   [A / E] leer", 4f);
+        float t = 0f;
+        while (!Completado)
+        {
+            bool leidas = notaAyer != null && notaBucle != null && notaAyer.Leida && notaBucle.Leida;
+            if (leidas || t >= esperaMonstruo) break;
+            if (h.Distancia(transform.position) < radioLlegada + 25f) t += Time.deltaTime;
+            yield return null;
+        }
+        if (Completado) yield break;
+        while (DocumentoUI.Abierto || DialogoUI.Activo) yield return null;
+        yield return new WaitForSeconds(1.2f);
+        if (Completado) yield break;
+
+        VHSOverlay.Glitch(0.7f, 0.6f);
+        if (MusicaAdaptativa.Instancia != null) MusicaAdaptativa.Instancia.Silencio(2f);
+        DialogoUI.Susurrar("", "...ya saben que estoy aquí.", 3f);
+        yield return new WaitForSeconds(1.5f);
+        // Si hay otro monstruo ocupado, espera a que se vaya y vuelve a intentar
+        for (int i = 0; i < 40 && !Completado; i++)
+        {
+            AcechoDirector d = AcechoDirector.Instancia;
+            if (d != null && !d.HayMonstruoActivo) { d.ForzarEn(h.Jugador.position); yield break; }
+            yield return new WaitForSeconds(3f);
+        }
     }
 }

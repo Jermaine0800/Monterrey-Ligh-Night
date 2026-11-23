@@ -37,6 +37,16 @@ public class CameraController : MonoBehaviour
 
     public void Enfocar(Transform t) { enfoque = t; }
 
+    // Escondido: la cámara se queda quieta en un punto (solo puedes asomarte girando un poco)
+    bool fijada; Vector3 ojoFijo; float yawCentro, yawRango;
+    public void FijarOjos(Vector3 pos, float yaw, float rango)
+    {
+        fijada = true; ojoFijo = pos; yawCentro = yaw; yawRango = rango;
+        giroHorizontal = yaw; giroVertical = 0f;
+        transform.position = pos;
+    }
+    public void SoltarOjos() { fijada = false; }
+
     /// <summary>
     /// Algunos modelos importados traen su propia cámara (p. ej. "PS2_Cam" dentro del guía)
     /// y le ganan a la del jugador. Aquí apagamos cualquier otra cámara que dibuje a pantalla.
@@ -164,6 +174,15 @@ public class CameraController : MonoBehaviour
                 giroHorizontal = Mathf.LerpAngle(giroHorizontal, angulo, 2.5f * Time.unscaledDeltaTime);
                 giroVertical = Mathf.Lerp(giroVertical, primeraPersona ? -5f : 6f, 2f * Time.unscaledDeltaTime);
             }
+        }
+
+        if (fijada)
+        {
+            giroHorizontal = yawCentro + Mathf.Clamp(Mathf.DeltaAngle(yawCentro, giroHorizontal), -yawRango, yawRango);
+            giroVertical = Mathf.Clamp(giroVertical, -25f, 30f);
+            transform.rotation = Quaternion.Euler(giroVertical, giroHorizontal, 0f);
+            transform.position = ojoFijo;
+            return;
         }
 
         Quaternion rotacion = Quaternion.Euler(giroVertical, giroHorizontal, 0f);

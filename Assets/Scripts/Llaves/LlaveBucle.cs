@@ -41,7 +41,7 @@ public class LlaveBucle : MonoBehaviour, IInteractable
         transform.Rotate(0f, 70f * Time.deltaTime, 0f, Space.World);
 
         if (!Disponible) { Mostrar(false); return; }
-        if (!soloConLinterna) { Mostrar(true); return; }
+        if (!soloConLinterna) { Mostrar(true); if (brillo != null) brillo.intensity = 1.6f + Mathf.Sin(Time.time * 4f) * 0.6f; return; }
 
         if (linterna == null) linterna = FindAnyObjectByType<FlashlightController>();
         Camera cam = Camera.main;
@@ -88,6 +88,13 @@ public class LlaveBucle : MonoBehaviour, IInteractable
 
         if (LlavesBucle.Instancia != null) LlavesBucle.Instancia.Sumar();
         int n = LlavesBucle.Instancia != null ? LlavesBucle.Instancia.Llaves : 0;
+        PlayerInventory inv = InventarioUtil.Inventario;
+        if (inv != null)
+        {
+            if (inv.objetos.Count >= inv.capacidad) inv.capacidad++;   // las llaves siempre caben
+            inv.Agregar(InventarioUtil.Crear("Llave " + n + " de " + LlavesBucle.Total, ItemDefinition.Tipo.Llave, "Llave",
+                "Una de las cinco llaves de la puerta del bucle. " + (string.IsNullOrEmpty(frase) ? "" : frase)));
+        }
         DialogoUI.Susurrar("", string.IsNullOrEmpty(frase) ? "Llave " + n + " de " + LlavesBucle.Total + "." : frase, 3.5f);
         gameObject.SetActive(false);
     }

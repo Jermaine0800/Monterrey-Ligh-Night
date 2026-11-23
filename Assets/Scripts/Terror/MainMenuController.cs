@@ -166,15 +166,15 @@ public class MainMenuController : MonoBehaviour
         // (botón, color Xbox apagado, acción)
         var filas = new (string boton, Color color, string accion)[]
         {
-            ("L",  HorrorUI.Hueso,                 "Stick izquierdo — caminar      ·  L3 / LB — correr"),
-            ("R",  HorrorUI.Hueso,                 "Stick derecho — cámara         ·  R3 — 1ª / 3ª persona"),
-            ("RB", HorrorUI.Hueso,                 "Interactuar  /  recoger  /  esconderse"),
-            ("RT", HorrorUI.Hueso,                 "Golpear"),
-            ("B",  new Color(0.75f, 0.2f, 0.2f),   "Agacharse  /  atrás"),
-            ("Y",  new Color(0.85f, 0.7f, 0.2f),   "Maletín (necesitas la mochila)"),
-            ("X",  new Color(0.25f, 0.45f, 0.85f), "Linterna"),
-            ("A",  new Color(0.3f, 0.7f, 0.3f),    "Aceptar  /  avanzar diálogo"),
-            ("☰",  HorrorUI.Hueso,                 "START — pausa"),
+            ("L",  HorrorUI.Hueso,                 "Stick izq. — caminar   ·   L3 / LB — correr      [WASD · Shift]"),
+            ("R",  HorrorUI.Hueso,                 "Stick der. — mirar   ·   R3 — 1ª / 3ª persona     [Ratón · V]"),
+            ("A",  new Color(0.3f, 0.7f, 0.3f),    "Acción: recoger, leer, abrir, esconderse        [E]"),
+            ("B",  new Color(0.75f, 0.2f, 0.2f),   "Agacharse  /  salir del escondite  /  atrás      [C]"),
+            ("X",  new Color(0.25f, 0.45f, 0.85f), "Linterna                                          [F]"),
+            ("Y",  new Color(0.85f, 0.7f, 0.2f),   "Maletín: usar curaciones y equipar armas        [Tab]"),
+            ("RT", HorrorUI.Hueso,                 "Golpear con el arma equipada                     [Clic]"),
+            ("✚",  HorrorUI.Hueso,                 "◀ ▶ cambiar arma   ·   ▲ curarse rápido           [Q / R · H]"),
+            ("☰",  HorrorUI.Hueso,                 "Pausa                                             [Esc]"),
         };
 
         for (int i = 0; i < filas.Length; i++)

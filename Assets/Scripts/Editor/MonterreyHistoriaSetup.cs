@@ -122,7 +122,7 @@ public static class MonterreyHistoriaSetup
     {
         Vector3 mejor = Mundo.EnSuelo(inicio + Vector3.forward * 120f);
         float mejorPuntaje = float.MinValue;
-        for (float r = 90f; r <= 200f; r += 10f)
+        for (float r = 130f; r <= 230f; r += 10f)
             for (float a = 0; a < 360f; a += 7.5f)
             {
                 Vector3 p = inicio + Quaternion.Euler(0, a, 0) * Vector3.forward * r;
@@ -138,10 +138,10 @@ public static class MonterreyHistoriaSetup
     /// <summary>Una ladera entre 40 y 75 m, de preferencia hacia el mirador, para meter el muro del túnel.</summary>
     static Vector3 BuscarLadera(Terrain t, Vector3 inicio, Vector3 haciaMirador, out Vector3 normal)
     {
-        Vector3 mejor = Mundo.EnSuelo(inicio + haciaMirador * 55f);
+        Vector3 mejor = Mundo.EnSuelo(inicio + haciaMirador * 80f);
         normal = -haciaMirador;
         float mejorPuntaje = float.MinValue;
-        for (float r = 40f; r <= 75f; r += 5f)
+        for (float r = 60f; r <= 105f; r += 5f)
             for (float a = -80f; a <= 80f; a += 8f)
             {
                 Vector3 p = inicio + Quaternion.Euler(0, a, 0) * haciaMirador * r;

@@ -48,11 +48,13 @@ public static class MonterreyAmbientacionSetup
                 case SitioPanteon p: Panteon(p.transform, a); break;
                 case SitioTunel t: Tunel(t, a); break;
                 case SitioIglesia i: Capilla(i.transform, a); break;
+                case SitioCasa ca: Casa(ca.transform, a); break;
                 case SitioMirador m: Mirador(m.transform, a); break;
             }
         }
         if (mm.puertaBucle != null) Portal(mm.puertaBucle);
         Senderos(mm);
+        MonterreyNotasSetup.Colocar(mm);
 
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         Debug.Log("[Monterrey] Ambientación lista: Vigía con animaciones, portal, ofrenda, veladoras, trampas, notas y letreros.");
@@ -187,7 +189,7 @@ public static class MonterreyAmbientacionSetup
 
     // ================================================================== Ayudantes
 
-    static Material Mat(string n, Texture2D t, Color c, bool recorte = false, bool unlit = false, bool dobleCara = false)
+    internal static Material Mat(string n, Texture2D t, Color c, bool recorte = false, bool unlit = false, bool dobleCara = false)
     {
         string ruta = Mats + "/" + n + ".mat";
         Material m = AssetDatabase.LoadAssetAtPath<Material>(ruta);
@@ -227,7 +229,7 @@ public static class MonterreyAmbientacionSetup
 
     static Vector3 W(Transform s, float x, float z) => Mundo.EnSuelo(s.TransformPoint(new Vector3(x, 0, z)));
 
-    static Transform Cubo(Transform p, string n, Vector3 posMundo, Vector3 esc, Quaternion rot, Material m, bool col = false)
+    internal static Transform Cubo(Transform p, string n, Vector3 posMundo, Vector3 esc, Quaternion rot, Material m, bool col = false)
     {
         GameObject g = GameObject.CreatePrimitive(PrimitiveType.Cube);
         g.name = n; g.transform.SetParent(p, true); g.transform.position = posMundo; g.transform.rotation = rot; g.transform.localScale = esc;
@@ -255,7 +257,7 @@ public static class MonterreyAmbientacionSetup
         return g.transform;
     }
 
-    static Light Luz(Transform p, Vector3 posMundo, Color c, float rango, float intens, bool parpadeo = true)
+    internal static Light Luz(Transform p, Vector3 posMundo, Color c, float rango, float intens, bool parpadeo = true)
     {
         GameObject g = new GameObject("Luz"); g.transform.SetParent(p, true); g.transform.position = posMundo;
         Light l = g.AddComponent<Light>(); l.type = LightType.Point; l.color = c; l.range = rango; l.intensity = intens; l.shadows = LightShadows.None;
@@ -302,13 +304,14 @@ public static class MonterreyAmbientacionSetup
         Plano(p, "Pinta_" + tex, pos, rot, new Vector2(ancho, alto), Mat(tex, t, Color.white, true));
     }
 
-    static void Nota(Transform p, Vector3 pos, string titulo, string texto, string tex = "Nota")
+    internal static NotaLeible Nota(Transform p, Vector3 pos, string titulo, string texto, string tex = "Nota")
     {
         Transform hoja = Plano(p, "Nota", pos + Vector3.up * 0.02f, Quaternion.Euler(90, Random.Range(0f, 360f), 0), new Vector2(0.25f, 0.31f), Mat(tex, T(tex), Color.white, false, false, true));
         GameObject g = new GameObject("NotaLeible"); g.transform.SetParent(p, true); g.transform.position = pos;
         BoxCollider bc = g.AddComponent<BoxCollider>(); bc.isTrigger = true; bc.size = new Vector3(0.8f, 0.6f, 0.8f); bc.center = Vector3.up * 0.2f;
         NotaLeible n = g.AddComponent<NotaLeible>(); n.titulo = titulo; n.texto = texto;
         Luz(p, pos + Vector3.up * 0.4f, new Color(0.9f, 0.9f, 1f), 1.5f, 0.6f, false);
+        return n;
     }
 
     /// <summary>Figura de ramas (Blair Witch) colgando de un árbol, se mece.</summary>
@@ -500,6 +503,23 @@ public static class MonterreyAmbientacionSetup
         Nota(a, s.TransformPoint(new Vector3(1.2f, 0.05f, zFondo + 4f)), "ORACIÓN ESCRITA A MANO",
             "Virgencita, que ya se acabe la noche.\nLlevo cinco veces aquí. Cinco.\nTomo la llave del altar y las puertas se cierran. Algo entra corriendo.\nMe escondo en el confesionario y aguanto la respiración.\nSi no me escondo... vuelvo a despertar en el claro.");
         Cempasuchil(a, s.TransformPoint(new Vector3(0, 0, 4f)), 20, 1.2f);
+    }
+
+    static void Casa(Transform s, Transform a)
+    {
+        Pilar(a, s.position + s.forward * 9f, new Color(1f, 0.75f, 0.5f));
+        float piso = 0.38f;
+        // Pintas adentro (Pasillo y cuarto del fondo), veladoras en la sala, cempasúchil en el porche
+        Pinta(a, "Pinta_NoVoltees", s.TransformPoint(new Vector3(-2.15f, piso + 1.7f, 4.7f)), s.rotation * Quaternion.Euler(0, 90f, 0), 1.1f);
+        Pinta(a, "Pinta_CuantasVeces", s.TransformPoint(new Vector3(-5.3f, piso + 1.8f, -1.0f)), s.rotation * Quaternion.Euler(0, 180f, 0), 1.0f);
+        Pinta(a, "Pinta_ElTeGuia", s.TransformPoint(new Vector3(6.68f, piso + 1.6f, 0.8f)), s.rotation * Quaternion.Euler(0, -90f, 0), 1.2f);
+        Veladoras(a, s.TransformPoint(new Vector3(0.2f, piso, 1.2f)), 14, 0.6f);
+        Veladoras(a, s.TransformPoint(new Vector3(-5.0f, piso, -3.2f)), 8, 0.35f, false);
+        Cempasuchil(a, s.TransformPoint(new Vector3(0, 0, 8.5f)), 16, 1.2f);
+        // Polaroids de la familia tiradas en el pasillo
+        Material pol = Mat("Polaroid", T("Polaroid"), Color.white);
+        for (int i = 0; i < 4; i++)
+            Plano(a, "Polaroid", s.TransformPoint(new Vector3(Random.Range(-0.7f, 0.7f), piso + 0.02f, 3.8f + i * 0.6f)), s.rotation * Quaternion.Euler(90, Random.Range(0f, 360f), 0), new Vector2(0.12f, 0.14f), pol);
     }
 
     static void Mirador(Transform s, Transform a)

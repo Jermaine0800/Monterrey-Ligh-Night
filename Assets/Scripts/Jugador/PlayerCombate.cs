@@ -15,40 +15,81 @@ public class PlayerCombate : MonoBehaviour
     [Tooltip("Momento del golpe dentro de la animación (segundos)")]
     public float retrasoImpacto = 0.25f;
 
-    // ---- Arma (pala, tubo...) con usos limitados
-    public bool TieneArma => usosArma > 0;
-    public string NombreArma { get; private set; } = "";
-    public int UsosArma => usosArma;
-    int usosArma;
-    float danioArma, alcanceArma;
+    // ---- Arma equipada (viene del maletín). Sin arma = manos.
+    public ItemDefinition ArmaActual { get; private set; }
+    public bool TieneArma => ArmaActual != null && ArmaActual.usos > 0;
+    public string NombreArma => ArmaActual != null ? ArmaActual.nombre : "";
+    public int UsosArma => ArmaActual != null ? ArmaActual.usos : 0;
+    float danioArma => ArmaActual != null ? ArmaActual.valor : danio;
+    float alcanceArma => ArmaActual != null ? ArmaActual.alcance : alcance;
     GameObject visualArma;
 
-    /// <summary>Equipa un arma: pega más fuerte y más lejos hasta que se rompe.</summary>
-    public void EquiparArma(string nombre, float danio, float alcance, int usos, GameObject visual)
+    /// <summary>Equipa un arma del maletín (null = manos).</summary>
+    public void Equipar(ItemDefinition arma)
     {
         if (visualArma != null) Destroy(visualArma);
-        NombreArma = nombre; danioArma = danio; alcanceArma = alcance; usosArma = usos;
+        ArmaActual = arma;
+        if (arma == null) return;
+        GameObject visual = InventarioUtil.NuevoVisual(arma.nombre);
         visualArma = visual;
         if (visual != null)
         {
             Animator a = GetComponentInChildren<Animator>();
             Transform mano = a != null && a.isHuman ? a.GetBoneTransform(HumanBodyBones.LeftHand) : null;
-            visual.transform.SetParent(mano != null ? mano : transform, false);
+            visual.transform.SetParent(mano != null ? mano : transform, true);
             visual.transform.localPosition = mano != null ? new Vector3(0, 0.05f, 0.04f) : new Vector3(-0.35f, 1f, 0.3f);
             visual.transform.localRotation = Quaternion.Euler(0, 0, 90f);
         }
+        if (src != null) src.PlayOneShot(ProceduralAudio.ClicMenu(), 0.6f);
+    }
+
+    /// <summary>Compatibilidad: equipar un arma sin pasar por el maletín.</summary>
+    public void EquiparArma(string nombre, float danio, float alcance, int usos, GameObject visual)
+    {
+        if (visual != null) { InventarioUtil.RegistrarVisual(nombre, visual); Destroy(visual); }
+        Equipar(InventarioUtil.Crear(nombre, ItemDefinition.Tipo.Arma, nombre, "", danio, alcance, usos));
     }
 
     void Gastar()
     {
-        if (usosArma <= 0) return;
-        usosArma--;
-        if (usosArma == 0)
+        if (ArmaActual == null || ArmaActual.usos <= 0) return;
+        ArmaActual.usos--;
+        if (ArmaActual.usos == 0)
         {
-            DialogoUI.Susurrar("", "La " + NombreArma.ToLower() + " se rompió.", 2.5f);
+            DialogoUI.Susurrar("", NombreArma + " se rompió.", 2.5f);
             src.PlayOneShot(ProceduralAudio.Rechinido(77), 0.8f);
-            if (visualArma != null) Destroy(visualArma);
+            PlayerInventory inv = GetComponent<PlayerInventory>() ?? InventarioUtil.Inventario;
+            if (inv != null) inv.Quitar(ArmaActual);
+            Equipar(null);
+            CambiarArma(1);
         }
+    }
+
+    /// <summary>Pasa a la siguiente (o anterior) arma del maletín, incluyendo "manos".</summary>
+    public void CambiarArma(int dir)
+    {
+        PlayerInventory inv = GetComponent<PlayerInventory>() ?? InventarioUtil.Inventario;
+        System.Collections.Generic.List<ItemDefinition> armas = new System.Collections.Generic.List<ItemDefinition> { null };
+        if (inv != null) foreach (ItemDefinition it in inv.objetos) if (it != null && it.tipo == ItemDefinition.Tipo.Arma && it.usos > 0) armas.Add(it);
+        int k = Mathf.Max(0, armas.IndexOf(ArmaActual));
+        k = (k + dir + armas.Count) % armas.Count;
+        Equipar(armas[k]);
+        DialogoUI.Susurrar("", armas[k] != null ? armas[k].nombre + "  (" + armas[k].usos + " golpes)" : "Manos", 1.5f);
+    }
+
+    /// <summary>Usa la curación más pequeña que tengas (▲ / H).</summary>
+    void CurarRapido()
+    {
+        PlayerInventory inv = GetComponent<PlayerInventory>() ?? InventarioUtil.Inventario;
+        SaludJugador s = GetComponent<SaludJugador>();
+        if (inv == null || s == null) return;
+        if (s.Vida01 >= 0.999f) { DialogoUI.Susurrar("", "Estoy bien por ahora.", 1.5f); return; }
+        ItemDefinition mejor = null;
+        foreach (ItemDefinition it in inv.objetos) if (it != null && it.tipo == ItemDefinition.Tipo.Curacion && (mejor == null || it.valor < mejor.valor)) mejor = it;
+        if (mejor == null) { DialogoUI.Susurrar("", "No tengo nada para curarme.", 1.5f); return; }
+        inv.Quitar(mejor);
+        Curacion.Usar(gameObject, mejor.valor);
+        DialogoUI.Susurrar("", mejor.nombre + ": +" + Mathf.RoundToInt(mejor.valor) + " de vida.", 2f);
     }
 
     Animator animator;
@@ -80,9 +121,13 @@ public class PlayerCombate : MonoBehaviour
 
     void Update()
     {
-        if (!HorrorGameState.PuedeJugar || Time.time < listo) return;
+        if (!HorrorGameState.PuedeJugar) return;
         PlayerEscondite e = GetComponent<PlayerEscondite>();
         if (e != null && e.Escondido) return;
+        if (HorrorInput.ArmaSiguiente) CambiarArma(1);
+        if (HorrorInput.ArmaAnterior) CambiarArma(-1);
+        if (HorrorInput.CurarRapido) CurarRapido();
+        if (Time.time < listo) return;
 
         if (HorrorInput.Golpe)
         {

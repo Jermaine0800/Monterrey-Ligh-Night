@@ -210,7 +210,7 @@ public class DialogoUI : MonoBehaviour
     public static void Susurrar(string quien, string frase, float segundos = 3.5f)
     {
         if (Instancia == null) return;
-        Instancia.susurro.text = (string.IsNullOrEmpty(quien) ? "" : quien + ":  ") + "“" + frase + "”";
+        Instancia.susurro.text = (string.IsNullOrEmpty(quien) ? "" : quien + ":  ") + "“" + HorrorInput.Traducir(frase) + "”";
         Instancia.susurro.color = HorrorUI.Hueso;
         Instancia.finSusurro = Time.unscaledTime + segundos;
         Instancia.srcVoz.pitch = 0.7f;
@@ -220,6 +220,7 @@ public class DialogoUI : MonoBehaviour
     /// <summary>Aviso de "OBJETIVO ACTUALIZADO" arriba de la pantalla.</summary>
     public static void NuevoObjetivo(string texto)
     {
+        texto = HorrorInput.Traducir(texto);
         InventoryUI.Objetivo = texto;
         if (Instancia == null) return;
         Instancia.toastTexto.text = texto;
