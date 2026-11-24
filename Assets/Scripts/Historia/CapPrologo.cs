@@ -11,24 +11,43 @@ public class CapPrologo : CapituloBase
 
     const string Texto =
         "27 de Noviembre de 1998.\n\n" +
-        "Expedición de exploración urbana (Urbex) en las faldas del Cerro de la Silla.\n\n" +
+        "Cuadrilla de inspección de la Línea K, un túnel de metro que nunca se terminó, en las faldas del Cerro de la Silla.\n\n" +
+        "El practicante Hernán Camarena llevaba la videocámara.\n\n" +
         "El equipo se separó en el Sector La Pastora.\n\n" +
         "Esta cinta fue recuperada por la policía local semanas después.\n\n" +
         "Se recomienda discreción.";
+
+    // Tiempos en segundos del video CampamentoTarde.mp4 (renderizado en Blender)
+    static readonly CinematicaVideo.Sub[] SubtitulosTarde =
+    {
+        new CinematicaVideo.Sub(0.3f, 3.8f, "", "27/11/1998  ·  6:48 PM  ·  Campamento base, Cerro de la Silla"),
+        new CinematicaVideo.Sub(4.0f, 10.9f, "HERNÁN (TÚ)", "Buenas... ¿aquí es la cuadrilla de la Línea K? Soy Hernán Camarena, el practicante. Mucho gusto."),
+        new CinematicaVideo.Sub(11.2f, 17.9f, "MARIO", "¡Ah, tú eres el nuevo! Mucho gusto, Hernán. Yo soy Mario, el jefe de cuadrilla."),
+        new CinematicaVideo.Sub(18.2f, 21.9f, "CHUY", "Y yo soy Chuy. El que carga todo lo que Mario no quiere cargar."),
+        new CinematicaVideo.Sub(22.1f, 26.8f, "MARIO", "¿Traes la videocámara? El ingeniero quiere todo grabado. Todo."),
+        new CinematicaVideo.Sub(27.0f, 29.8f, "HERNÁN (TÚ)", "Sí, aquí está. Con pila nueva."),
+        new CinematicaVideo.Sub(30.0f, 33.5f, "CHUY", "Oye... ¿a poco no te dijo el supervisor lo que sale en la noche?"),
+        new CinematicaVideo.Sub(33.7f, 38.2f, "MARIO", "Ya, Chuy, no asustes al nuevo. Solo es un practicante."),
+        new CinematicaVideo.Sub(38.4f, 45.1f, "CHUY", "Por eso le digo. Hace siete años bajó una cuadrilla a la Línea K. Encontraron cinco llaves... y a ninguno de ellos."),
+        new CinematicaVideo.Sub(45.3f, 47.3f, "HERNÁN (TÚ)", "¿Cinco llaves? ¿De qué?"),
+        new CinematicaVideo.Sub(47.5f, 52.9f, "MARIO", "Son cuentos de la sierra. Que hay una que sonríe... y otro que se asoma entre los árboles."),
+        new CinematicaVideo.Sub(53.1f, 56.6f, "CHUY", "Si allá adentro alguien te sonríe... no le regreses la sonrisa."),
+        new CinematicaVideo.Sub(61.8f, 68.8f, "MARIO", "Bueno. Ya se metió el sol. Prendan las linternas. En cuanto oscurezca, bajamos."),
+    };
 
     // Tiempos en segundos del video IntroLineaK.mp4 (24 fps → cuadro / 24)
     static readonly CinematicaVideo.Sub[] Subtitulos =
     {
         new CinematicaVideo.Sub(0.3f, 3.6f, "", "27/11/1998  ·  11:31 PM  ·  Cerro de la Silla, Sector La Pastora"),
-        new CinematicaVideo.Sub(4.0f, 8.4f, "MARIO", "Según el foro, la entrada de la Línea K está por aquí. Nunca la terminaron."),
+        new CinematicaVideo.Sub(4.0f, 8.4f, "MARIO", "Según los planos, la entrada de la Línea K está por aquí. Nunca la terminaron."),
         new CinematicaVideo.Sub(8.8f, 11.0f, "CHUY", "Ya es bien noche, güey. ¿Y si nos regresamos?"),
         new CinematicaVideo.Sub(11.2f, 13.8f, "MARIO", "Mira. Expediente cero ocho. Es aquí."),
-        new CinematicaVideo.Sub(14.3f, 16.6f, "TÚ", "Sigue grabando... sigue grabando."),
+        new CinematicaVideo.Sub(14.3f, 16.6f, "HERNÁN (TÚ)", "Sigue grabando... sigue grabando."),
         new CinematicaVideo.Sub(19.6f, 21.4f, "CHUY", "Esperen... ¿oyeron eso?"),
         new CinematicaVideo.Sub(22.0f, 24.0f, "MARIO", "Hay alguien allá al fondo... ¿Hola?"),
         new CinematicaVideo.Sub(24.1f, 25.0f, "CHUY", "No es una persona... ¡no es una persona!"),
         new CinematicaVideo.Sub(27.2f, 29.4f, "MARIO", "¡Corre! ¡CORRE!"),
-        new CinematicaVideo.Sub(31.6f, 34.0f, "TÚ", "No... no puedo moverme..."),
+        new CinematicaVideo.Sub(31.6f, 34.0f, "HERNÁN (TÚ)", "No... no puedo moverme..."),
     };
 
     public override IEnumerator Jugar(MisionManager h)
@@ -66,6 +85,9 @@ public class CapPrologo : CapituloBase
 
         // La cinta: lo que pasó en la Línea K (renderizado en Blender)
         c.enabled = false;   // la pantalla negra del prólogo va encima de todo; se esconde mientras corre la cinta
+        // Primero: la tarde en el campamento base (Hernán llega como el nuevo)
+        yield return CinematicaVideo.Reproducir("CampamentoTarde.mp4", SubtitulosTarde);
+        // Luego: esa noche, en la Línea K
         yield return CinematicaVideo.Reproducir("IntroLineaK.mp4", Subtitulos);
         c.enabled = true;
 

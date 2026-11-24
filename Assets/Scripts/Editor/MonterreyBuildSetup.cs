@@ -39,7 +39,7 @@ public static class MonterreyBuildSetup
             locationPathName = Path.Combine(CarpetaBuild, "MonterreyLightNight.exe"),
             target = BuildTarget.StandaloneWindows64,
             targetGroup = BuildTargetGroup.Standalone,
-            options = BuildOptions.None
+            options = BuildOptions.CompressWithLz4HC
         };
         BuildReport r = BuildPipeline.BuildPlayer(op);
 

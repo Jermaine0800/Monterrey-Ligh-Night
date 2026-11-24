@@ -30,7 +30,7 @@ public static class MonterreyVocesSetup
         Directory.CreateDirectory(carpeta);
         var frases = new System.Collections.Generic.Dictionary<string, string>
         {
-            { "m1", "Según el foro, la entrada de la Línea K está por aquí. Nunca la terminaron." },
+            { "m1", "Según los planos, la entrada de la Línea K está por aquí. Nunca la terminaron." },
             { "c1", "Ya es bien noche, güey. ¿Y si nos regresamos?" },
             { "m2", "Mira. Expediente cero ocho. Es aquí." },
             { "p1", "Sigue grabando... sigue grabando." },
@@ -42,6 +42,19 @@ public static class MonterreyVocesSetup
             { "p3", "¿Mario? ¿Chuy? ¿Son ustedes?" },
             { "m5", "Ven... ya se acabó. Ya nos podemos ir." },
             { "c4", "¡No voltees! ¡Apúrate!" },
+            // Prólogo: la tarde en el campamento
+            { "h1", "Buenas... ¿aquí es la cuadrilla de la Línea K? Soy Hernán Camarena, el practicante. Mucho gusto." },
+            { "m6", "¡Ah, tú eres el nuevo! Mucho gusto, Hernán. Yo soy Mario, el jefe de cuadrilla." },
+            { "c5", "Y yo soy Chuy. El que carga todo lo que Mario no quiere cargar." },
+            { "m7", "¿Traes la videocámara? El ingeniero quiere todo grabado. Todo." },
+            { "h2", "Sí, aquí está. Con pila nueva." },
+            { "c6", "Oye... ¿a poco no te dijo el supervisor lo que sale en la noche?" },
+            { "m8", "Ya, Chuy, no asustes al nuevo. Solo es un practicante." },
+            { "c7", "Por eso le digo. Hace siete años bajó una cuadrilla a la Línea K. Encontraron cinco llaves... y a ninguno de ellos." },
+            { "h3", "¿Cinco llaves? ¿De qué?" },
+            { "m9", "Son cuentos de la sierra. Que hay una que sonríe... y otro que se asoma entre los árboles." },
+            { "c8", "Si allá adentro alguien te sonríe... no le regreses la sonrisa." },
+            { "m10", "Bueno. Ya se metió el sol. Prendan las linternas. En cuanto oscurezca, bajamos." },
         };
         GenerarEn(frases, carpeta);
     }
