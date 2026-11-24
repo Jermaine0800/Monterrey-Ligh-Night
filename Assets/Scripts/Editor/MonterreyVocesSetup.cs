@@ -19,7 +19,32 @@ public static class MonterreyVocesSetup
     {
         if (Application.platform != RuntimePlatform.WindowsEditor) { EditorUtility.DisplayDialog("Voces", "Solo funciona en Windows.", "OK"); return; }
         Directory.CreateDirectory(Carpeta);
-        string carpetaAbs = Path.GetFullPath(Carpeta);
+        GenerarEn(VozProtagonista.Frases, Path.GetFullPath(Carpeta));
+    }
+
+    /// <summary>Menú 19: voces de la cinemática de inicio (Mario, Chuy y tú) → D:\Proyectos\Cinematica_audio\voces</summary>
+    [MenuItem("Monterrey/19. Voces de la cinemática de inicio")]
+    public static void VocesCinematica()
+    {
+        string carpeta = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Cinematica_audio/voces"));
+        Directory.CreateDirectory(carpeta);
+        var frases = new System.Collections.Generic.Dictionary<string, string>
+        {
+            { "m1", "Según el foro, la entrada de la Línea K está por aquí. Nunca la terminaron." },
+            { "c1", "Ya es bien noche, güey. ¿Y si nos regresamos?" },
+            { "m2", "Mira. Expediente cero ocho. Es aquí." },
+            { "p1", "Sigue grabando... sigue grabando." },
+            { "c2", "Esperen... ¿oyeron eso?" },
+            { "m3", "Hay alguien allá al fondo... ¿Hola?" },
+            { "c3", "No es una persona... ¡no es una persona!" },
+            { "m4", "¡Corre! ¡Corre!" },
+            { "p2", "No... no puedo moverme..." },
+        };
+        GenerarEn(frases, carpeta);
+    }
+
+    static void GenerarEn(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> lista, string carpetaAbs)
+    {
         string ps1 = Path.GetFullPath("Temp/voces.ps1");
         string log = Path.GetFullPath("Temp/voces.log");
 
@@ -27,7 +52,7 @@ public static class MonterreyVocesSetup
         sb.AppendLine("$ErrorActionPreference = 'Continue'");
         sb.AppendLine("$log = '" + log + "'; '' | Out-File $log -Encoding utf8");
         sb.AppendLine("$frases = @{}");
-        foreach (var f in VozProtagonista.Frases) sb.AppendLine("$frases['" + f.Key + "'] = '" + f.Value.Replace("'", "''") + "'");
+        foreach (var f in lista) sb.AppendLine("$frases['" + f.Key + "'] = '" + f.Value.Replace("'", "''") + "'");
         sb.AppendLine("$salida = '" + carpetaAbs + "'");
         sb.AppendLine(@"
 $hecho = $false

@@ -238,6 +238,82 @@ public class MisionManager : MonoBehaviour
         yield return Toma(desde, hasta, objetivo, 9f, "M O N T E R R E Y   L I G H T   N I G H T", "Cerro de la Silla  ·  Sector La Pastora  ·  27/11/1998");
     }
 
+    /// <summary>
+    /// Después de la cinta: despiertas noqueado en el piso del claro. Parpadeas, ves el cielo,
+    /// y te levantas despacio. (El modelo se acuesta girándolo; no hace falta animación extra.)
+    /// </summary>
+    public IEnumerator Despertar()
+    {
+        Camera cam = Camera.main;
+        if (cam == null || Jugador == null) yield break;
+        CameraController cc = FindAnyObjectByType<CameraController>();
+        HorrorGameState.modo = HorrorGameState.Modo.Dialogo;
+        if (cc != null) cc.enabled = false;
+        Animator an = Jugador.GetComponentInChildren<Animator>();
+        Transform modelo = an != null && an.transform != Jugador ? an.transform : null;
+        Quaternion r0 = modelo != null ? modelo.localRotation : Quaternion.identity;
+        Vector3 p0 = modelo != null ? modelo.localPosition : Vector3.zero;
+        Vector3 pc0 = cam.transform.position; Quaternion rc0 = cam.transform.rotation;
+
+        // Acostado boca arriba: la cabeza queda hacia atrás
+        if (modelo != null) { modelo.localRotation = Quaternion.Euler(-90f, 0f, 0f) * r0; modelo.localPosition = p0 + Vector3.up * 0.15f; }
+        Vector3 cabeza = Jugador.position - Jugador.forward * 1.55f + Vector3.up * 0.25f;
+
+        // Párpados
+        Canvas c = HorrorUI.CrearCanvas("Despertar_Canvas", 440);
+        Image ojos = HorrorUI.CrearImagen(c.transform, "Parpados", Color.black);
+        HorrorUI.Estirar(ojos.rectTransform);
+        Text t = HorrorUI.CrearTexto(c.transform, "Texto", "", 30, HorrorUI.Hueso, TextAnchor.LowerCenter);
+        HorrorUI.Colocar(t.rectTransform, new Vector2(0.5f, 0f), new Vector2(0, 120), new Vector2(1400, 80));
+        t.supportRichText = true;
+
+        // 1) Mirando el cielo entre los árboles, desde el piso
+        Vector3 arriba = cabeza + Vector3.up * 0.15f;
+        float[] alfas = { 1f, 0.55f, 1f, 0.35f, 0.9f, 0.15f, 0f };
+        float[] tiempos = { 1.2f, 0.8f, 0.35f, 0.9f, 0.3f, 1.2f, 0.8f };
+        VHSOverlay.Glitch(0.6f, 0.8f);
+        for (int i = 0; i < alfas.Length; i++)
+        {
+            float a0 = ojos.color.a;
+            for (float k = 0; k < tiempos[i]; k += Time.deltaTime)
+            {
+                float u = k / tiempos[i];
+                ojos.color = new Color(0, 0, 0, Mathf.Lerp(a0, alfas[i], u));
+                cam.transform.position = arriba;
+                float bamboleo = Mathf.Sin(Time.time * 0.7f) * 6f;
+                cam.transform.rotation = Quaternion.LookRotation(Vector3.up * 3f + Jugador.forward + Jugador.right * Mathf.Sin(Time.time * 0.4f) * 0.4f, Jugador.forward) * Quaternion.Euler(0, 0, bamboleo);
+                yield return null;
+            }
+            if (i == 2) t.text = "<i>...¿qué... pasó?</i>";
+            if (i == 4) t.text = "<i>Mario... Chuy...</i>";
+        }
+        t.supportRichText = true;
+        t.text = "";
+
+        // 2) Te levantas: el cuerpo se endereza y la cámara pasa detrás del hombro
+        Vector3 detras = Jugador.position - Jugador.forward * 2.6f + Vector3.up * 1.75f + Jugador.right * 0.6f;
+        float dur = 2.6f;
+        for (float k = 0; k < dur; k += Time.deltaTime)
+        {
+            float u = Mathf.SmoothStep(0f, 1f, k / dur);
+            if (modelo != null)
+            {
+                modelo.localRotation = Quaternion.Slerp(Quaternion.Euler(-90f, 0f, 0f) * r0, r0, u);
+                modelo.localPosition = Vector3.Lerp(p0 + Vector3.up * 0.15f, p0, u);
+            }
+            Vector3 pos = Vector3.Lerp(arriba + Vector3.up * 0.3f, detras, u);
+            Vector3 mirar = Vector3.Lerp(cabeza + Vector3.up * 4f, Jugador.position + Vector3.up * 1.2f + Jugador.forward * 3f, u);
+            cam.transform.position = pos;
+            cam.transform.rotation = Quaternion.Slerp(cam.transform.rotation, Quaternion.LookRotation(mirar - pos), 6f * Time.deltaTime);
+            yield return null;
+        }
+        if (modelo != null) { modelo.localRotation = r0; modelo.localPosition = p0; }
+        Destroy(c.gameObject);
+        cam.transform.SetPositionAndRotation(pc0, rc0);
+        if (cc != null) cc.enabled = true;
+        HorrorGameState.modo = HorrorGameState.Modo.Jugando;
+    }
+
     /// <summary>Antes de cada lugar: un vistazo de hacia dónde hay que ir.</summary>
     public IEnumerator CinematicaLugar(Transform lugar, string nombre)
     {
