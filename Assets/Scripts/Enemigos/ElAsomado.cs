@@ -117,6 +117,11 @@ public class ElAsomado : EnemigoBase
         if (EstadoActual == Estado.Acechando) EmpezarCarrera();
     }
 
+    protected override float VidaRecomendada => 420f;
+
+    /// <summary>Le pegaste o ya te asustó una vez: vuelve a correr hacia ti.</summary>
+    protected override void AlRecuperarse() { EmpezarCarrera(); }
+
     public override void Reiniciar()
     {
         base.Reiniciar();

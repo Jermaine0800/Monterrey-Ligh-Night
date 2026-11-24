@@ -19,8 +19,14 @@ public abstract class EnemigoBase : Entidad, IReiniciable
     public float enfriamientoSusto = 25f;
 
     [Header("Destierro")]
-    [Tooltip("Segundos que desaparece cuando lo derrotas a golpes")]
-    public float tiempoDesterrado = 90f;
+    [Tooltip("Segundos que desaparece cuando lo derrotas a golpes (antes de tener las 5 llaves)")]
+    public float tiempoDesterrado = 45f;
+
+    /// <summary>Vida mínima: cuesta muchos golpes (pala ~6, hacha ~5). Se sube en Awake si en la escena está más baja.</summary>
+    protected virtual float VidaRecomendada => 320f;
+    /// <summary>Con las 5 llaves ya se pueden matar de verdad: no vuelven.</summary>
+    public bool MuertoParaSiempre { get; private set; }
+    float danioEncuentro; int sustosEncuentro;
 
     public Estado EstadoActual { get; protected set; } = Estado.Inactivo;
     public bool Activo => EstadoActual == Estado.Acechando || EstadoActual == Estado.Atacando;
@@ -41,6 +47,8 @@ public abstract class EnemigoBase : Entidad, IReiniciable
 
     protected override void Awake()
     {
+        vidaMaxima = Mathf.Max(vidaMaxima, VidaRecomendada);
+        invulnerableTrasGolpe = Mathf.Max(invulnerableTrasGolpe, 0.5f);
         base.Awake();
         anim = GetComponentInChildren<Animator>();
         if (anim != null) anim.applyRootMotion = false;
@@ -75,8 +83,9 @@ public abstract class EnemigoBase : Entidad, IReiniciable
     /// <summary>Lo llama el AcechoDirector para que empiece a acechar.</summary>
     public virtual void Activar()
     {
-        if (EstadoActual == Estado.Desterrado || !EstaVivo) return;
+        if (MuertoParaSiempre || EstadoActual == Estado.Desterrado || !EstaVivo) return;
         enVistazo = false;
+        danioEncuentro = 0f; sustosEncuentro = 0;
         BuscarJugador();
         EstadoActual = Estado.Acechando;
         AlActivar();
@@ -132,6 +141,7 @@ public abstract class EnemigoBase : Entidad, IReiniciable
 
     public virtual void Reiniciar()
     {
+        if (MuertoParaSiempre) return;
         StopAllCoroutines();
         Revivir();
         Mostrar(false);
@@ -250,9 +260,24 @@ public abstract class EnemigoBase : Entidad, IReiniciable
         yield return new WaitForSeconds(0.35f);
 
         voz.spatialBlend = 1f;
-        Retirarse();
         VozProtagonista.Decir("susto");
+        sustosEncuentro++;
+        // Más interacción: la primera vez no se va. Retrocede, se queda viéndote y sigue cazándote.
+        if (sustosEncuentro < 2 && cam != null && EstaVivo)
+        {
+            Vector3 atras = transform.position - cam.transform.forward * 0.1f + (transform.position - cam.transform.position).normalized * 4.5f;
+            atras.y = transform.position.y;
+            transform.position = Mundo.EnSuelo(atras);
+            Animar("Idle", 0.1f);
+            ultimoSusto = Time.time - enfriamientoSusto + 7f;   // el siguiente ataque en ~7 s
+            EstadoActual = Estado.Acechando;
+            AlRecuperarse();
+        }
+        else Retirarse();
     }
+
+    /// <summary>Después de un golpe o un susto, si se queda: qué hace (el Asomado vuelve a correr hacia ti).</summary>
+    protected virtual void AlRecuperarse() { }
 
     // ------------------------------------------------------------------ Golpes del jugador
 
@@ -261,38 +286,70 @@ public abstract class EnemigoBase : Entidad, IReiniciable
 
     protected override void AlRecibirDanio(float cantidad, Vector3 origen)
     {
-        if (!Activo) return;
+        if (EstadoActual == Estado.Desterrado) return;
         voz.PlayOneShot(golpeado, 0.9f);
         voz.PlayOneShot(grito, 0.35f);
         VHSOverlay.Glitch(0.6f, 0.3f);
-        if (EstaVivo) StartCoroutine(RutinaAturdido());
+        HorrorInput.Vibrar(0.5f, 0.3f, 0.15f, this);
+        danioEncuentro += cantidad;
+        if (EstaVivo) StartCoroutine(RutinaAturdido(origen));
     }
 
-    IEnumerator RutinaAturdido()
+    /// <summary>Se tambalea hacia atrás y sigue. Solo huye si en este encuentro le quitaste casi la mitad de la vida.</summary>
+    IEnumerator RutinaAturdido(Vector3 origen)
     {
         if (rutinaSusto != null) { StopCoroutine(rutinaSusto); rutinaSusto = null; voz.spatialBlend = 1f; }
         EstadoActual = Estado.Aturdido;
-        Animar("Death", 0.05f);
-        yield return new WaitForSeconds(0.6f);
-        Retirarse();
+        Vector3 empuje = transform.position - origen; empuje.y = 0;
+        empuje = empuje.sqrMagnitude > 0.01f ? empuje.normalized : -transform.forward;
+        if (anim != null) anim.speed = 0.2f;
+        Vector3 p0 = transform.position, p1 = Mundo.EnSuelo(p0 + empuje * 0.9f);
+        for (float t = 0; t < 0.25f; t += Time.deltaTime) { transform.position = Vector3.Lerp(p0, p1, t / 0.25f); yield return null; }
+        yield return new WaitForSeconds(0.45f);
+        if (anim != null) anim.speed = 1f;
+        if (danioEncuentro >= vidaMaxima * 0.45f)
+        {
+            DialogoUI.Susurrar("", nombre + " huyó entre los árboles... va a volver.", 2.5f);
+            Susurrar(0.5f);
+            Retirarse();
+            yield break;
+        }
+        EstadoActual = Estado.Acechando;
+        MirarJugador(1f);
+        voz.PlayOneShot(grito, 0.5f);
+        AlRecuperarse();
     }
 
     protected override void Morir()
     {
         StopAllCoroutines();
-        StartCoroutine(RutinaDesterrado());
+        bool final = LlavesBucle.Instancia != null && LlavesBucle.Instancia.Llaves >= LlavesBucle.Total;
+        StartCoroutine(final ? RutinaMuerteFinal() : RutinaDesterrado());
     }
 
     IEnumerator RutinaDesterrado()
     {
         EstadoActual = Estado.Desterrado;
         Animar("Death", 0.05f);
-        DialogoUI.Susurrar("", nombre + " se desvaneció... por ahora.", 3f);
-        yield return new WaitForSeconds(1.2f);
+        yield return CinematicaMuerte.Reproducir(this, false);
         Mostrar(false);
         AlTerminar?.Invoke(this);
         yield return new WaitForSeconds(tiempoDesterrado);
         Revivir();
         EstadoActual = Estado.Inactivo;
     }
+
+    /// <summary>Con las 5 llaves el bucle se rompe y ellos también: esta vez no regresan.</summary>
+    IEnumerator RutinaMuerteFinal()
+    {
+        MuertoParaSiempre = true;
+        EstadoActual = Estado.Desterrado;
+        Animar("Death", 0.05f);
+        yield return CinematicaMuerte.Reproducir(this, true);
+        Mostrar(false);
+        AlTerminar?.Invoke(this);
+    }
+
+    /// <summary>Para la cinemática: centro del cuerpo.</summary>
+    public Vector3 CentroPublico => Centro;
 }

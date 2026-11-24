@@ -39,6 +39,9 @@ public static class MonterreyVocesSetup
             { "c3", "No es una persona... ¡no es una persona!" },
             { "m4", "¡Corre! ¡Corre!" },
             { "p2", "No... no puedo moverme..." },
+            { "p3", "¿Mario? ¿Chuy? ¿Son ustedes?" },
+            { "m5", "Ven... ya se acabó. Ya nos podemos ir." },
+            { "c4", "¡No voltees! ¡Apúrate!" },
         };
         GenerarEn(frases, carpeta);
     }

@@ -38,6 +38,16 @@ public class CapFinal : CapituloBase
 
         if (h.Director != null) h.Director.Habilitar(false);
         p.Abrir();
+        // Cinemática (Blender): la reja se abre, Mario y Chuy te llaman desde la luz, los monstruos se quedan mirando
+        HorrorGameState.modo = HorrorGameState.Modo.Dialogo;
+        yield return CinematicaVideo.Reproducir("PortalFinal.mp4", new[]
+        {
+            new CinematicaVideo.Sub(0.4f, 4.0f, "", "Las cinco cerraduras... encajan."),
+            new CinematicaVideo.Sub(12.6f, 14.0f, "TÚ", "¿Mario? ¿Chuy? ¿Son ustedes?"),
+            new CinematicaVideo.Sub(14.2f, 17.6f, "MARIO", "Ven... ya se acabó. Ya nos podemos ir."),
+            new CinematicaVideo.Sub(22.6f, 24.6f, "CHUY", "¡No voltees! ¡Apúrate!"),
+        });
+        HorrorGameState.modo = HorrorGameState.Modo.Jugando;
         VozProtagonista.Decir("final", 0f);
         h.Objetivo("Cruza");
         Vector3 cruce = p.transform.position + p.transform.forward * 2.5f;
