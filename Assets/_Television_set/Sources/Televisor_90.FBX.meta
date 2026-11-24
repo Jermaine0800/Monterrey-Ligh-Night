@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 0d2af790d2a3c244ba25944d1d5b70b6
+AssetOrigin:
+  serializedVersion: 1
+  productId: 26193
+  packageName: TV Set
+  packageVersion: 1.0
+  assetPath: Assets/_Television_set/Sources/Televisor_90.FBX
+  uploadId: 43628
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable:
@@ -41,7 +48,7 @@ ModelImporter:
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
     importConstraints: 0
-    animationCompression: 1
+    animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
@@ -53,7 +60,7 @@ ModelImporter:
   meshes:
     lODScreenPercentages: []
     globalScale: 0.01
-    meshCompression: 0
+    meshCompression: 2
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
@@ -130,10 +137,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 26193
-  packageName: TV Set
-  packageVersion: 1.0
-  assetPath: Assets/_Television_set/Sources/Televisor_90.FBX
-  uploadId: 43628

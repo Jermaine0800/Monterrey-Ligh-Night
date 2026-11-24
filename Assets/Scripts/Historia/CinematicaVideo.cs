@@ -30,7 +30,7 @@ public static class CinematicaVideo
         pantalla.color = Color.black;
 
         Text sub = HorrorUI.CrearTexto(c.transform, "Subtitulo", "", 34, HorrorUI.Hueso, TextAnchor.LowerCenter);
-        HorrorUI.Colocar(sub.rectTransform, new Vector2(0.5f, 0f), new Vector2(0, 90), new Vector2(1500, 120));
+        HorrorUI.Colocar(sub.rectTransform, new Vector2(0.5f, 0f), new Vector2(0, 165), new Vector2(1500, 120));
         sub.supportRichText = true;
         Outline ol = sub.gameObject.AddComponent<Outline>(); ol.effectColor = Color.black; ol.effectDistance = new Vector2(2, -2);
         Text saltar = HorrorUI.CrearTexto(c.transform, "Saltar", "", 20, HorrorUI.HuesoTenue, TextAnchor.LowerRight);
