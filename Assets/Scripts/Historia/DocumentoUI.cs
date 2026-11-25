@@ -26,8 +26,14 @@ public static class DocumentoUI
 
         Text t = HorrorUI.CrearTexto(papel.transform, "Titulo", titulo, 34, new Color(0.45f, 0.05f, 0.04f), TextAnchor.UpperCenter, FontStyle.Bold);
         HorrorUI.Colocar(t.rectTransform, new Vector2(0.5f, 1f), new Vector2(0, -50), new Vector2(820, 60));
+        t.horizontalOverflow = HorizontalWrapMode.Wrap; t.resizeTextForBestFit = true; t.resizeTextMinSize = 20; t.resizeTextMaxSize = 34;
         Text b = HorrorUI.CrearTexto(papel.transform, "Cuerpo", cuerpo, 23, new Color(0.12f, 0.11f, 0.1f), TextAnchor.UpperLeft);
-        HorrorUI.Colocar(b.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, -30), new Vector2(800, 740));
+        HorrorUI.Colocar(b.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, -20), new Vector2(780, 700));
+        // que el texto nunca se salga de la hoja: se parte en renglones y, si es muy largo, se achica
+        b.horizontalOverflow = HorizontalWrapMode.Wrap;
+        b.verticalOverflow = VerticalWrapMode.Truncate;
+        b.resizeTextForBestFit = true; b.resizeTextMinSize = 14; b.resizeTextMaxSize = 24;
+        b.lineSpacing = 1.15f;
         Text sello = HorrorUI.CrearTexto(papel.transform, "Sello", "CONFIDENCIAL", 54, new Color(0.6f, 0.05f, 0.04f, 0.35f), TextAnchor.MiddleCenter, FontStyle.Bold);
         HorrorUI.Colocar(sello.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, -260), new Vector2(600, 90));
         sello.rectTransform.localRotation = Quaternion.Euler(0, 0, 18f);

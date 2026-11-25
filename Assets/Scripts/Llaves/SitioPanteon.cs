@@ -29,7 +29,8 @@ public class SitioPanteon : SitioLlave
     protected override IEnumerator Reto(MisionManager h)
     {
         int total = velas != null ? velas.Length : 0;
-        h.Objetivo("Prende las velas de las tumbas  [RB]   0/" + total);
+        string texto = "Prende las velas de las tumbas con calavera  (mantén [A])   ";
+        h.Objetivo(texto + "0/" + total);
         int previas = 0;
         while (true)
         {
@@ -38,8 +39,9 @@ public class SitioPanteon : SitioLlave
             if (prendidas != previas)
             {
                 previas = prendidas;
-                h.Objetivo("Prende las velas de las tumbas  [RB]   " + prendidas + "/" + total);
-                if (prendidas == 2) { SoltarMonstruo(h.Jugador.position); }
+                h.Objetivo(texto + prendidas + "/" + total);
+                if (prendidas == 1) Asomarse(h.Jugador.position);                       // algo te mira entre las cruces
+                if (prendidas == 2 && prendidas < total) SoltarMonstruo(h.Jugador.position);   // y luego viene
             }
             if (prendidas >= total) break;
             yield return null;
@@ -48,7 +50,22 @@ public class SitioPanteon : SitioLlave
         yield return new WaitForSeconds(0.8f);
         VHSOverlay.Glitch(0.7f, 0.8f);
         if (rejaCripta != null) rejaCripta.Abrir();
-        DialogoUI.Susurrar("", "La reja de la cripta... se abrió sola.", 3f);
+        DialogoUI.Susurrar("", "La reja de la cripta... se abrió sola. Y algo más despertó.", 3.5f);
         h.Objetivo("Entra a la cripta");
+        // Con las tres velas prendidas, los dos se activan: uno te alcanza en el panteón y el otro acecha después
+        yield return new WaitForSeconds(2.5f);
+        SoltarMonstruo(h.Jugador.position);
+        if (AcechoDirector.Instancia != null) { AcechoDirector.Instancia.Habilitar(true); AcechoDirector.Instancia.ForzarAparicion(); }
+    }
+
+    /// <summary>Un monstruo se deja ver un momento entre las tumbas (no ataca).</summary>
+    void Asomarse(Vector3 jugador)
+    {
+        EnemigoBase[] todos = FindObjectsByType<EnemigoBase>(FindObjectsSortMode.None);
+        if (todos.Length == 0) return;
+        EnemigoBase e = todos[Random.Range(0, todos.Length)];
+        if (!e.isActiveAndEnabled) return;
+        Vector3 punto = Mundo.PuntoFueraDeVista(jugador, 9f, 15f);
+        e.StartCoroutine(e.Vistazo(punto, 6f));
     }
 }

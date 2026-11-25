@@ -121,6 +121,8 @@ public static class HorrorInput
     /// <summary>Acción contextual: A (estándar) o RB / E.</summary>
     public static bool Interactuar => (Gamepad.current != null && (Gamepad.current.buttonSouth.wasPressedThisFrame || Gamepad.current.rightShoulder.wasPressedThisFrame)) || Tecla(Key.E, Key.Enter);
     /// <summary>Salir del escondite: A, B o E.</summary>
+    public static bool InteractuarMantenido => (Gamepad.current != null && (Gamepad.current.buttonSouth.isPressed || Gamepad.current.rightShoulder.isPressed)) ||
+        (Keyboard.current != null && (Keyboard.current.eKey.isPressed || Keyboard.current.enterKey.isPressed));
     public static bool SalirEscondite => Interactuar || Agacharse;
     public static bool ArmaSiguiente => (Gamepad.current != null && Gamepad.current.dpad.right.wasPressedThisFrame) || Tecla(Key.R, Key.Digit2) || RuedaRaton < 0;
     public static bool ArmaAnterior => (Gamepad.current != null && Gamepad.current.dpad.left.wasPressedThisFrame) || Tecla(Key.Q, Key.Digit1) || RuedaRaton > 0;

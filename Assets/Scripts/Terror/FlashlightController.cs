@@ -7,13 +7,13 @@ using UnityEngine;
 public class FlashlightController : MonoBehaviour
 {
     [Header("Batería")]
-    public float duracionBateria = 240f;   // segundos encendida de 100% a 0%
+    public float duracionBateria = 600f;   // segundos encendida de 100% a 0%
     [Range(0, 1)] public float bateria = 1f;
 
     [Header("Luz")]
-    public float intensidad = 6f;
-    public float rango = 25f;
-    public float anguloSpot = 55f;
+    public float intensidad = 8.5f;
+    public float rango = 32f;
+    public float anguloSpot = 64f;
     public Color color = new Color(1f, 0.93f, 0.8f);
 
     public bool TieneLinterna => luz != null;
@@ -31,6 +31,13 @@ public class FlashlightController : MonoBehaviour
         src = gameObject.AddComponent<AudioSource>();
         src.playOnAwake = false;
         clic = ProceduralAudio.ClicMenu();
+        // Un poquito de luz alrededor del jugador (como los ojos que se acostumbran a la oscuridad)
+        GameObject ojos = new GameObject("LuzOjosAcostumbrados");
+        ojos.transform.SetParent(transform, false);
+        ojos.transform.localPosition = new Vector3(0f, 1.6f, 0.3f);
+        Light l = ojos.AddComponent<Light>();
+        l.type = LightType.Point; l.range = 9f; l.intensity = 0.9f; l.shadows = LightShadows.None;
+        l.color = new Color(0.62f, 0.68f, 0.85f);
     }
 
     void Update()
@@ -44,20 +51,21 @@ public class FlashlightController : MonoBehaviour
 
         if (HorrorGameState.PuedeJugar && HorrorInput.Linterna)
         {
-            encendida = !encendida && bateria > 0f;
+            encendida = !encendida;
             src.PlayOneShot(clic, 0.7f);
         }
 
         if (encendida)
         {
             bateria = Mathf.Max(0f, bateria - Time.deltaTime / duracionBateria);
-            if (bateria <= 0f) encendida = false;
+            // sin batería no se apaga del todo: queda una luz débil y temblorosa
         }
 
         // Parpadeo cuando la batería está baja (o durante glitches fuertes)
         float factor = 1f;
         if (bateria < 0.2f) factor = Random.value < 0.06f ? Random.Range(0.05f, 0.5f) : 1f;
         factor *= Mathf.Lerp(0.55f, 1f, bateria / 0.3f);
+        if (bateria <= 0f) factor = 0.3f * (Random.value < 0.08f ? Random.Range(0.3f, 1f) : 1f);
 
         luz.enabled = encendida;
         luz.intensity = intensidad * factor;

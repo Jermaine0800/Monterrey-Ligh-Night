@@ -39,6 +39,47 @@ public class TunelLineaK : MonoBehaviour
         if (silueta != null) silueta.SetActive(false);
         fuente = gameObject.AddComponent<AudioSource>();
         fuente.spatialBlend = 1f; fuente.minDistance = 3f; fuente.maxDistance = 30f;
+        CrearRampas();
+        // un poco más de luz en el andén (antes casi no se veía)
+        if (luces != null) foreach (Light l in luces) if (l != null) { l.intensity *= 1.5f; l.range *= 1.25f; }
+    }
+
+    /// <summary>
+    /// Rampas para subir de las vías al andén (el andén mide 1 m: si te caías a las vías ya no podías subir).
+    /// Dos a los lados del andén y una en la punta donde se corta la obra.
+    /// </summary>
+    void CrearRampas()
+    {
+        if (interior == null || interior.Find("Rampa_Anden_0") != null) return;
+        Transform anden = interior.Find("Anden");
+        Material mat = anden != null && anden.GetComponent<Renderer>() != null ? anden.GetComponent<Renderer>().sharedMaterial : null;
+        float largo = Mathf.Sqrt(1.6f * 1.6f + 1f);      // baja 1 m en 1.6 m (≈32°)
+        float[] zs = { -14f, 1.5f };
+        for (int i = 0; i < zs.Length; i++)
+            Rampa("Rampa_Anden_" + i, new Vector3(0.247f, 0.415f, zs[i]), Quaternion.Euler(0f, 0f, -32f), new Vector3(largo + 0.15f, 0.2f, 2.2f), mat);
+        Rampa("Rampa_Anden_Punta", new Vector3(-2.75f, 0.415f, 6.75f), Quaternion.Euler(32f, 0f, 0f), new Vector3(4.4f, 0.2f, largo + 0.15f), mat);
+    }
+
+    void Rampa(string nombre, Vector3 local, Quaternion giro, Vector3 tam, Material mat)
+    {
+        GameObject r = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        r.name = nombre;
+        r.transform.SetParent(interior, false);
+        r.transform.localPosition = local;
+        r.transform.localRotation = giro;
+        r.transform.localScale = tam;
+        if (mat != null) r.GetComponent<Renderer>().sharedMaterial = mat;
+        r.isStatic = false;
+        // franja amarilla de precaución en la orilla
+        GameObject f = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        f.name = nombre + "_Franja";
+        Destroy(f.GetComponent<Collider>());
+        f.transform.SetParent(r.transform, false);
+        f.transform.localPosition = new Vector3(0f, 0.51f, 0f);
+        f.transform.localScale = new Vector3(1f, 0.02f, 0.12f);
+        Renderer fr = f.GetComponent<Renderer>();
+        Shader sh = Shader.Find("Universal Render Pipeline/Unlit");
+        if (sh != null) { Material m = new Material(sh); m.SetColor("_BaseColor", new Color(0.85f, 0.75f, 0.1f)); fr.sharedMaterial = m; }
     }
 
     void Update()

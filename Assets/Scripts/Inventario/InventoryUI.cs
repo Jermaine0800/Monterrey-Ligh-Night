@@ -201,8 +201,8 @@ public class InventoryUI : MonoBehaviour
         descItem.horizontalOverflow = HorizontalWrapMode.Wrap;
         HorrorUI.Colocar(descItem.rectTransform, new Vector2(0.5f, 0), new Vector2(0, 60), new Vector2(1000, 90));
 
-        Text ayuda = HorrorUI.CrearTexto(r, "Ayuda", "[A / E] USAR · EQUIPAR · LEER      [✚ / WASD] MOVER      [B / Tab] CERRAR", 22, HorrorUI.HuesoTenue, TextAnchor.MiddleRight);
-        HorrorUI.Colocar(ayuda.rectTransform, new Vector2(1, 1), new Vector2(-70, -150), new Vector2(900, 30));
+        Text ayuda = HorrorUI.CrearTexto(r, "Ayuda", "[A / E / CLIC] USAR · EQUIPAR · LEER      [✚ / STICK / WASD / RATÓN / 1-9] ELEGIR      [B / Tab] CERRAR", 22, HorrorUI.HuesoTenue, TextAnchor.MiddleRight);
+        HorrorUI.Colocar(ayuda.rectTransform, new Vector2(1, 1), new Vector2(-70, -150), new Vector2(1300, 30));
     }
 
     static Texture2D TexturaECG()
@@ -265,6 +265,29 @@ public class InventoryUI : MonoBehaviour
 
         int antes = sel;
         int total = celdas.Count;
+        // Ratón: pasar encima selecciona, clic izquierdo usa / equipa, rueda cambia de casilla
+        var raton = UnityEngine.InputSystem.Mouse.current;
+        if (raton != null)
+        {
+            Vector2 pos = raton.position.ReadValue();
+            bool movio = raton.delta.ReadValue().sqrMagnitude > 0.01f;
+            for (int i = 0; i < total; i++)
+            {
+                if (!RectTransformUtility.RectangleContainsScreenPoint(celdas[i].rectTransform, pos, null)) continue;
+                if (movio || raton.leftButton.wasPressedThisFrame) sel = i;
+                if (raton.leftButton.wasPressedThisFrame) { if (sel != antes) { src.PlayOneShot(clic, 0.5f); MostrarSeleccion(); } UsarSeleccionado(); return; }
+                break;
+            }
+            float rueda = raton.scroll.ReadValue().y;
+            if (rueda < 0f) sel = (sel + 1) % total;
+            if (rueda > 0f) sel = (sel - 1 + total) % total;
+            if (raton.rightButton.wasPressedThisFrame) { UsarSeleccionado(); return; }
+        }
+        // Teclas 1–9: ir directo a esa casilla
+        var tec = UnityEngine.InputSystem.Keyboard.current;
+        if (tec != null)
+            for (int i = 0; i < 9 && i < total; i++)
+                if (tec[(UnityEngine.InputSystem.Key)((int)UnityEngine.InputSystem.Key.Digit1 + i)].wasPressedThisFrame) sel = i;
         if (HorrorInput.Derecha || HorrorInput.RB) sel = (sel + 1) % total;
         if (HorrorInput.Izquierda || HorrorInput.LB) sel = (sel - 1 + total) % total;
         if (HorrorInput.Abajo) sel = Mathf.Min(sel + columnas, total - 1);
@@ -283,6 +306,7 @@ public class InventoryUI : MonoBehaviour
         raiz.SetActive(true);
         HorrorGameState.modo = HorrorGameState.Modo.Inventario;
         Time.timeScale = 0f;
+        Cursor.lockState = CursorLockMode.None; Cursor.visible = true;   // para poder elegir con el ratón
         src.PlayOneShot(golpe, 0.8f);
         VHSOverlay.Glitch(0.4f, 0.15f);
         Refrescar();
@@ -294,6 +318,7 @@ public class InventoryUI : MonoBehaviour
         raiz.SetActive(false);
         Time.timeScale = 1f;
         HorrorGameState.modo = HorrorGameState.Modo.Jugando;
+        Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false;
         src.PlayOneShot(clic, 0.5f);
     }
 
