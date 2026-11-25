@@ -80,3 +80,6 @@ Assets/TerrainDemoScene_URP.meta
 # Blender: respaldos y logs
 Blender/*.blend1
 Blender/*_log.txt
+
+# Restos del build WebGL
+/Data/
