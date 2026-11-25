@@ -30,6 +30,7 @@ public static class MonterreyWebSetup
         EditorSceneManager.SaveOpenScenes();
         PlayerSettings.companyName = "Jermaine0800";
         PlayerSettings.productName = "Monterrey Light Night";
+        CalidadWebComoPC();   // mismo look PSX/CRT que en Windows (el nivel "Mobile" no trae los filtros y pedía FSR)
         PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
         PlayerSettings.WebGL.decompressionFallback = true;
         PlayerSettings.WebGL.dataCaching = true;
@@ -66,5 +67,24 @@ public static class MonterreyWebSetup
     public static void RegresarWindows()
     {
         EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
+    }
+
+    /// <summary>En la web usar el nivel de calidad "PC" (render VNTG con filtros PSX/CRT) en vez de "Mobile".</summary>
+    static void CalidadWebComoPC()
+    {
+        Object[] qs = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/QualitySettings.asset");
+        if (qs == null || qs.Length == 0) return;
+        SerializedObject so = new SerializedObject(qs[0]);
+        SerializedProperty lista = so.FindProperty("m_PerPlatformDefaultQuality");
+        if (lista == null) return;
+        int pc = System.Array.IndexOf(QualitySettings.names, "PC");
+        if (pc < 0) pc = QualitySettings.names.Length - 1;
+        for (int i = 0; i < lista.arraySize; i++)
+        {
+            SerializedProperty par = lista.GetArrayElementAtIndex(i);
+            if (par.FindPropertyRelative("first").stringValue == "WebGL") par.FindPropertyRelative("second").intValue = pc;
+        }
+        so.ApplyModifiedProperties();
+        AssetDatabase.SaveAssets();
     }
 }
