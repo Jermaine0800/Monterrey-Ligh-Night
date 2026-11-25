@@ -143,6 +143,10 @@ public class CameraController : MonoBehaviour
     void LateUpdate()
     {
         if (objetivo == null) return;
+        // En la web (y al volver de la pausa) el navegador suelta el ratón con Esc: un clic lo vuelve a capturar
+        if (HorrorGameState.PuedeJugar && Cursor.lockState != CursorLockMode.Locked &&
+            UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
+        { Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false; }
 
         // Cambiar de cámara (R3)
         if (!forzada && HorrorGameState.PuedeJugar && HorrorInput.CambiarCamara)

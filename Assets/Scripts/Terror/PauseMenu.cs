@@ -58,7 +58,7 @@ public class PauseMenu : MonoBehaviour
             "[Y]          Maletín: curar y equipar armas     (Tab)",
             "[RT]         Golpear                            (Clic)",
             "[◀ ▶]        Cambiar arma  ·  [▲] Curarse       (Rueda · Q/R · H)",
-            "[START]      Pausa  ·  [VIEW] Ver controles     (Esc · F1)",
+            "[START]      Pausa  ·  [VIEW] Ver controles     (Esc · F1 / G)",
         };
         for (int i = 0; i < filas.Length; i++)
         {

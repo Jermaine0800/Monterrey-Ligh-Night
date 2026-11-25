@@ -217,6 +217,34 @@ public class CapturasManual : MonoBehaviour
             System.IO.File.WriteAllText(System.IO.Path.Combine(Carpeta, "prueba_maletin.txt"), logM.ToString());
         }
 
+        // Prueba de combate: cuántos golpes aguantan, si se quedan después de un golpe y si mueren para siempre con 5 llaves
+        {
+            System.Text.StringBuilder lc = new System.Text.StringBuilder();
+            AcechoDirector dirC = FindAnyObjectByType<AcechoDirector>();
+            if (dirC != null) dirC.Habilitar(false);
+            foreach (EnemigoBase e in FindObjectsByType<EnemigoBase>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                e.Reiniciar();
+                e.ActivarEn(pm.transform.position + pm.transform.forward * 6f);
+                yield return new WaitForSecondsRealtime(0.3f);
+                lc.AppendLine(e.nombre + ": vida " + e.Vida + "/" + e.VidaMaxima + "  estado " + e.EstadoActual);
+                e.RecibirDanio(60f, pm.transform.position);
+                yield return new WaitForSecondsRealtime(1.0f);
+                lc.AppendLine("  tras 1 golpe (60): vida " + e.Vida + "  estado " + e.EstadoActual + (e.Activo ? "  (sigue cazando ✔)" : "  (se fue)"));
+                int golpes = 1;
+                while (e.EstaVivo && golpes < 20)
+                {
+                    if (!e.Activo) { e.ActivarEn(pm.transform.position + pm.transform.forward * 6f); yield return new WaitForSecondsRealtime(0.2f); }
+                    e.RecibirDanio(60f, pm.transform.position); golpes++;
+                    yield return new WaitForSecondsRealtime(0.8f);
+                }
+                lc.AppendLine("  golpes de 60 para derrotarlo: " + golpes + "  → estado " + e.EstadoActual + "  para siempre: " + e.MuertoParaSiempre);
+                yield return new WaitForSecondsRealtime(3f);   // termina la cinemática de derrota
+            }
+            System.IO.File.WriteAllText(System.IO.Path.Combine(Carpeta, "prueba_combate.txt"), lc.ToString());
+            Time.timeScale = 1f;
+        }
+
         // Los monstruos: idle, caminar, ataque y susto
         Ir(pm, Mundo.EnSuelo(inicio + Vector3.right * 3f, 0.1f), inicio + Vector3.right * 3f + Vector3.forward * 10f);
         yield return new WaitForSecondsRealtime(1.5f);

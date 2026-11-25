@@ -110,7 +110,7 @@ public class AyudaControles : MonoBehaviour
                 F("Tab", "maletín (inventario)"),
                 F("Clic izq.", "golpear con el arma"),
                 F("Rueda / Q R", "cambiar arma   ·   H  curarse"),
-                F("Esc", "pausa   ·   F1  esta ayuda") });
+                F("Esc", "pausa   ·   F1 / G  esta ayuda") });
         cuerpo.supportRichText = true;
         recordatorio.text = "[" + HorrorInput.Boton("controles") + "] Controles";
     }

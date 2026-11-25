@@ -88,7 +88,7 @@ public static class HorrorInput
     /// <summary>Pasar diálogo / cerrar nota: A, E, Enter, Espacio o clic.</summary>
     public static bool Avanzar => Aceptar || RB || (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
     /// <summary>Ver la tarjeta de controles: View/Back en el control, F1 en teclado.</summary>
-    public static bool VerControles => (Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame) || Tecla(Key.F1, Key.F1);
+    public static bool VerControles => (Gamepad.current != null && Gamepad.current.selectButton.wasPressedThisFrame) || Tecla(Key.F1, Key.G);
     static int RuedaRaton
     {
         get
@@ -155,7 +155,7 @@ public static class HorrorInput
             case "correr": return c ? "L3 / LB" : "Shift";
             case "camara": return c ? "R3" : "V";
             case "pausa": return c ? "Start" : "Esc";
-            case "controles": return c ? "View" : "F1";
+            case "controles": return c ? "View" : "F1 / G";
             case "curar": return c ? "▲" : "H";
             default: return accion;
         }
@@ -189,9 +189,9 @@ public static class HorrorInput
 
     static System.Collections.IEnumerator VibrarRutina(Gamepad gp, float bajo, float alto, float s)
     {
-        gp.SetMotorSpeeds(bajo, alto);
+        try { gp.SetMotorSpeeds(bajo, alto); } catch { yield break; }
         yield return new WaitForSecondsRealtime(s);
-        if (gp != null) gp.SetMotorSpeeds(0, 0);
+        try { if (gp != null) gp.SetMotorSpeeds(0, 0); } catch { }
     }
 }
 

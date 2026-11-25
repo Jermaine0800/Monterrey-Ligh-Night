@@ -18,7 +18,7 @@ public static class CinematicaVideo
 
     public static IEnumerator Reproducir(string archivo, Sub[] subs)
     {
-        string ruta = System.IO.Path.Combine(Application.streamingAssetsPath, "Cinematicas", archivo);
+        string ruta = Application.streamingAssetsPath + "/Cinematicas/" + archivo;   // en la web es una URL
         Canvas c = HorrorUI.CrearCanvas("Cinematica_" + archivo, 450);
         Image negro = HorrorUI.CrearImagen(c.transform, "Negro", Color.black);
         HorrorUI.Estirar(negro.rectTransform);
@@ -48,9 +48,14 @@ public static class CinematicaVideo
         RenderTexture rt = new RenderTexture(1280, 720, 0);
         vp.targetTexture = rt;
         pantalla.texture = rt;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        vp.audioOutputMode = VideoAudioOutputMode.Direct;     // en el navegador el audio del video va directo
+        vp.EnableAudioTrack(0, true);
+#else
         vp.audioOutputMode = VideoAudioOutputMode.AudioSource;
         vp.EnableAudioTrack(0, true);
         vp.SetTargetAudioSource(0, audio);
+#endif
         bool error = false;
         vp.errorReceived += (v, m) => { error = true; Debug.LogWarning("[Cinemática] " + m); };
         vp.Prepare();
@@ -76,9 +81,10 @@ public static class CinematicaVideo
                     if (t >= x.desde && t <= x.hasta)
                         s = string.IsNullOrEmpty(x.quien) ? "<i>" + x.texto + "</i>" : "<color=#c9b98a>" + x.quien + ":</color>  " + x.texto;
             sub.text = s;
-            if (t > 2f) saltar.text = "Mantén [" + HorrorInput.Boton("pausa") + "] para saltar";
+            if (t > 2f) saltar.text = HorrorInput.UsandoControl ? "Mantén [Start] para saltar" : "Mantén [Espacio] para saltar";
             bool sost = (UnityEngine.InputSystem.Gamepad.current != null && UnityEngine.InputSystem.Gamepad.current.startButton.isPressed) ||
-                        (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.escapeKey.isPressed);
+                        (UnityEngine.InputSystem.Keyboard.current != null && (UnityEngine.InputSystem.Keyboard.current.escapeKey.isPressed ||
+                         UnityEngine.InputSystem.Keyboard.current.spaceKey.isPressed || UnityEngine.InputSystem.Keyboard.current.enterKey.isPressed));
             mantener = sost ? mantener + Time.unscaledDeltaTime : 0f;
             if (mantener > 0.8f) break;
             if (t >= duracion - 0.05) break;

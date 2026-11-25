@@ -47,9 +47,11 @@ public static class VozProtagonista
                 fuente = g.AddComponent<AudioSource>();
                 fuente.spatialBlend = 0f;
                 // "micrófono de videocámara": sin graves, sin agudos, un poco saturado
+#if !UNITY_WEBGL || UNITY_EDITOR   // el navegador no soporta filtros de audio
                 g.AddComponent<AudioHighPassFilter>().cutoffFrequency = 220f;
                 g.AddComponent<AudioLowPassFilter>().cutoffFrequency = 4200f;
                 g.AddComponent<AudioDistortionFilter>().distortionLevel = 0.18f;
+#endif
             }
             fuente.pitch = 0.96f;
             fuente.Stop();

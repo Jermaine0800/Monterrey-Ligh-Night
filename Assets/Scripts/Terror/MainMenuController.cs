@@ -175,7 +175,7 @@ public class MainMenuController : MonoBehaviour
             ("Y",  new Color(0.85f, 0.7f, 0.2f),   "Maletín: usar curaciones y equipar armas        [Tab]"),
             ("RT", HorrorUI.Hueso,                 "Golpear con el arma equipada                     [Clic]"),
             ("✚",  HorrorUI.Hueso,                 "◀ ▶ cambiar arma   ·   ▲ curarse      [Rueda o Q R · H]"),
-            ("☰",  HorrorUI.Hueso,                 "Pausa   ·   View — ver controles en el juego     [Esc · F1]"),
+            ("☰",  HorrorUI.Hueso,                 "Pausa   ·   View — ver controles en el juego   [Esc · F1 / G]"),
         };
 
         for (int i = 0; i < filas.Length; i++)
@@ -318,6 +318,8 @@ public class MainMenuController : MonoBehaviour
             case 4:
 #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
+#elif UNITY_WEBGL
+                MostrarPantalla(Pantalla.PresionaStart);   // en el navegador no se puede "cerrar" el juego
 #else
                 Application.Quit();
 #endif
