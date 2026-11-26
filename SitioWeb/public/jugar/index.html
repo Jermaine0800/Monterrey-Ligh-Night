@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>Jugar · Monterrey Light Night</title>
+  <link rel="icon" href="/media/img/icono.png">
+  <link rel="stylesheet" href="jugar.css">
+</head>
+<body>
+  <div id="marco">
+    <canvas id="unity-canvas" tabindex="-1" aria-label="Monterrey Light Night"></canvas>
+    <div id="carga">
+      <p class="rec"><span></span>PLAY</p>
+      <h1>MONTERREY LIGHT NIGHT</h1>
+      <p id="estado">REBOBINANDO LA CINTA...</p>
+      <div class="barra"><div id="relleno"></div></div>
+      <p id="porcentaje">0%</p>
+      <p class="tip">Usa audífonos · Haz clic en el juego para capturar el ratón · Esc lo suelta · G muestra los controles</p>
+    </div>
+    <div id="error" hidden></div>
+  </div>
+  <nav id="barra-abajo">
+    <a href="/">◀ VOLVER AL SITIO</a>
+    <span>MONTERREY LIGHT NIGHT</span>
+    <button id="pantalla-completa" type="button">⛶ PANTALLA COMPLETA</button>
+  </nav>
+  <script src="Build/mln.loader.js"></script>
+  <script src="jugar.js"></script>
+</body>
+</html>
