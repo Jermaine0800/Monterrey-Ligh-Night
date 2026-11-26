@@ -6,7 +6,10 @@
       "**/.*",
       "**/node_modules/**",
       "**/*_DoNotShip/**",
-      "jugar/**"
+      "jugar/**",
+      "descargas/**",
+      "**/*.zip",
+      "**/*.apk"
     ],
     "cleanUrls": false,
     "trailingSlash": true,

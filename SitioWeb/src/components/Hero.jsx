@@ -37,7 +37,7 @@ export default function Hero() {
           <a href="#trailer" className="btn">▶ VER TRÁILER</a>
           <a href="#jugar" className="btn btn-rojo">DESCARGAR GRATIS</a>
         </div>
-        <p className="mono tenue etiquetas">Survival horror · Estética PS1 / VHS · Windows y Android · Control Xbox, teclado o táctil</p>
+        <p className="mono tenue etiquetas">Survival horror · Estética PS1 / VHS · Descarga para Windows (.zip) · Control Xbox o teclado y ratón</p>
       </div>
       <a href="#trailer" className="bajar mono">▼ SIGUE GRABANDO</a>
     </section>

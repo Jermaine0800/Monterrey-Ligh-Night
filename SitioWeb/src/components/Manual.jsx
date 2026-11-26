@@ -11,7 +11,6 @@ function Controles() {
       <div className="selector-controles">
         <button className={"sel" + (tipo === "xbox" ? " activa" : "")} onClick={() => setTipo("xbox")}>CONTROL XBOX</button>
         <button className={"sel" + (tipo === "teclado" ? " activa" : "")} onClick={() => setTipo("teclado")}>TECLADO Y RATÓN</button>
-        <button className={"sel" + (tipo === "celular" ? " activa" : "")} onClick={() => setTipo("celular")}>CELULAR</button>
       </div>
       <table className="controles">
         <tbody>
