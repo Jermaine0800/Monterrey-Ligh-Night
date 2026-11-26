@@ -5,8 +5,8 @@ export const CONFIG = {
   // Las descargas viven GRATIS en GitHub Releases (sin límite de descargas), no en Firebase.
   // Liga del .zip para Windows. Vacío = "muy pronto".
   descargaWindows: "https://github.com/Jermaine0800/monterrey-light-night-descargas/releases/latest/download/MonterreyLightNight_Windows.zip",
-  // APK de Android. Vacío = "muy pronto".
-  descargaAndroid: "",
+  // Android (.zip con el .apk adentro), también en GitHub Releases.
+  descargaAndroid: "https://github.com/Jermaine0800/monterrey-light-night-descargas/releases/latest/download/MonterreyLightNight_Android.zip",
   // Tu perfil de TikTok (opcional). Vacío = no se muestra.
   tiktok: "",
 };

@@ -22,15 +22,18 @@ export default function Jugar() {
   return (
     <section id="jugar" className="seccion jugar">
       <Titulo num="08">DESCARGAR Y JUGAR</Titulo>
-      <p className="intro">Gratis. Descarga el .zip para tu computadora, o juega directo en el navegador desde tu iPhone, Android o PC.</p>
+      <p className="intro">Gratis. Descarga el .zip para Windows o Android, o juega directo en el navegador desde tu iPhone.</p>
       <div className="opciones-jugar">
         <Descarga icono="💾" titulo="WINDOWS" liga={CONFIG.descargaWindows} peso="116 MB (.zip)"
           texto="Descomprime el .zip y abre MonterreyLightNight.exe. Control de Xbox o teclado y ratón." pronto="Muy pronto" />
-        <Descarga icono="📱" titulo="iPHONE · ANDROID · NAVEGADOR" liga={CONFIG.jugarWeb} peso="sin instalar (~70 MB)" accion="▶ JUGAR AHORA · " nueva
+        <Descarga icono="🤖" titulo="ANDROID" liga={CONFIG.descargaAndroid} peso="117 MB (.zip)"
+          texto="Descomprime el .zip, abre el .apk y dale Instalar (permite “orígenes desconocidos”). Controles en pantalla o control Bluetooth." pronto="Muy pronto" />
+        <Descarga icono="📱" titulo="iPHONE · NAVEGADOR" liga={CONFIG.jugarWeb} peso="sin instalar (~70 MB)" accion="▶ JUGAR AHORA · " nueva
           texto="Ábrelo en Safari o Chrome, pon el celular horizontal y usa los controles en pantalla. También sirve un control Bluetooth." pronto="Muy pronto" />
       </div>
       <div className="requisitos mono">
         <p><b>WINDOWS:</b> Windows 10/11 64 bits · 4 GB RAM · gráfica con DirectX 11 · 400 MB libres</p>
+        <p><b>ANDROID:</b> Android 8 o más nuevo · 4 GB RAM recomendados · juega en horizontal</p>
         <p><b>NAVEGADOR:</b> iPhone con iOS 16 o más nuevo (Safari) · Android con Chrome · 4 GB RAM recomendados · buena señal o Wi-Fi para la primera carga</p>
       </div>
     </section>
