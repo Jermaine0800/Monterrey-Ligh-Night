@@ -53,6 +53,8 @@ public class PlayerInteraction : MonoBehaviour
             if (objeto is LlaveBucle lb && (lb.Tomada || !lb.Disponible)) continue;
             if (objeto is VelaPanteon vp && (vp.Prendida || vp.Encendiendo)) continue;
             if (objeto is FogataCampamento fc && (fc.Prendida || fc.Encendiendo)) continue;
+            if (objeto is CarroCampamento cr && (cr.Encendido || cr.Arreglando)) continue;
+            if (objeto is CajaFusibles cf && (cf.Prendida || cf.Trabajando)) continue;
             float puntaje = Vector3.Distance(frente, c.ClosestPoint(frente));
             if (objeto is LlaveBucle) puntaje -= 1f;
             if (objeto is Casillero cas && cas.Abierto) puntaje += 2f;
@@ -78,6 +80,8 @@ public class PlayerInteraction : MonoBehaviour
         if (n2.Contains("Linterna") || n2.Contains("Flashlight")) return "Tomar la linterna";
         if (n2.Contains("Vela")) return "Mantén para prender la vela";
         if (n2.Contains("Fogata")) return "Mantén para prender la fogata";
+        if (n2.Contains("CajaFusibles")) return "Mantén para prender las luces del túnel";
+        if (n2.Contains("Carro")) return "Mantén para puentear el carro (su alarma los espanta)";
         if (n2.Contains("Puerta")) return "Abrir";
         return "Usar";
     }

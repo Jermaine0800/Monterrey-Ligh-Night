@@ -29,6 +29,7 @@ public class SitioCampamento : SitioLlave
     public override string ObjetivoLlegar => "Llave 1: el campamento del equipo";
 
     FogataCampamento fuego;
+    protected override bool RetoHecho => fuego != null && fuego.Prendida;
 
     void Start()
     {
@@ -37,6 +38,12 @@ public class SitioCampamento : SitioLlave
             fuego = fogata.GetComponent<FogataCampamento>();
             if (fuego == null) { fuego = fogata.gameObject.AddComponent<FogataCampamento>(); }
             fuego.luz = fogata; fuego.sitio = this;
+        }
+        // Carro viejo junto al campamento: arréglalo y su alarma espanta a los monstruos
+        if (FindAnyObjectByType<CarroCampamento>() == null)
+        {
+            Vector3 lugar = LugarLibre(out float giro);
+            CarroCampamento.Crear(lugar, giro);
         }
     }
 
@@ -68,5 +75,33 @@ public class SitioCampamento : SitioLlave
         yield return new WaitForSeconds(1.2f);
         SoltarMonstruo(h.Jugador.position);
         DialogoUI.Susurrar("", "...algo se movió detrás de las casas de campaña.", 3f);
+    }
+
+    /// <summary>Busca alrededor del campamento un lugar plano y despejado (sin casas de campaña, árboles ni rocas) para el carro.</summary>
+    Vector3 LugarLibre(out float giro)
+    {
+        Terrain ter = Terrain.activeTerrain;
+        for (int intento = 0; intento < 60; intento++)
+        {
+            float ang = intento * 37f;
+            float dist = 9f + (intento % 6) * 1.5f;
+            Vector3 p = Mundo.EnSuelo(transform.position + Quaternion.Euler(0, ang, 0) * transform.forward * dist);
+            giro = ang + 90f;
+            Quaternion q = Quaternion.Euler(0, giro, 0);
+            bool libre = true;
+            foreach (Collider c in Physics.OverlapBox(p + Vector3.up * 1.1f, new Vector3(1.6f, 0.9f, 3.2f), q, ~0, QueryTriggerInteraction.Ignore))
+                if (!(c is TerrainCollider)) { libre = false; break; }
+            if (!libre) continue;
+            // que no esté en pendiente fuerte
+            float h1 = Mundo.AlturaSuelo(p + q * Vector3.forward * 2f), h2 = Mundo.AlturaSuelo(p - q * Vector3.forward * 2f);
+            if (Mathf.Abs(h1 - h2) > 0.6f) continue;
+            // y que no haya árboles del terreno encima
+            bool arbol = false;
+            foreach (Vector3 a in Mundo.ArbolesCerca(p, 0f, 3.5f, 3)) { arbol = true; break; }
+            if (arbol) continue;
+            return p;
+        }
+        giro = transform.eulerAngles.y + 90f;
+        return Mundo.EnSuelo(transform.position + transform.forward * 12f);
     }
 }

@@ -124,7 +124,7 @@ public class AcechoDirector : MonoBehaviour
         }
         if (!habilitado || !HorrorGameState.PuedeJugar || DialogoUI.Activo) return;
         Eventos();
-        if (actual != null) { SegundoMonstruo(); return; }
+        if (actual != null) return;      // uno a la vez
 
         if (enfriamiento > 0f) { enfriamiento -= Time.deltaTime; return; }
 
@@ -181,7 +181,7 @@ public class AcechoDirector : MonoBehaviour
     {
         List<EnemigoBase> libres = enemigos.FindAll(e => e != null && e.EstadoActual == EnemigoBase.Estado.Inactivo);
         if (libres.Count == 0) { tension = tensionParaSoltarMonstruo * 0.5f; return; }
-        actual = libres[Random.Range(0, libres.Count)];
+        actual = Siguiente(libres);
         if (MusicaAdaptativa.Instancia != null) MusicaAdaptativa.Instancia.Silencio(3f);
         actual.Activar();
         tension = 0f;
@@ -205,7 +205,7 @@ public class AcechoDirector : MonoBehaviour
         if (actual != null && actual.Activo) return;
         List<EnemigoBase> libres = enemigos.FindAll(e => e != null && e.EstadoActual == EnemigoBase.Estado.Inactivo);
         if (libres.Count == 0) return;
-        actual = libres[Random.Range(0, libres.Count)];
+        actual = Siguiente(libres);
         Vector2 r = Random.insideUnitCircle.normalized * Random.Range(8f, 14f);
         if (MusicaAdaptativa.Instancia != null) MusicaAdaptativa.Instancia.Silencio(2.5f);
         actual.ActivarEn(punto + new Vector3(r.x, 0, r.y));
@@ -327,5 +327,15 @@ public class AcechoDirector : MonoBehaviour
             yield return null;   // el controlador de la linterna la restablece solo
         }
         DialogoUI.Susurrar("", "La linterna... no, no, no.", 2f);
+    }
+
+    // Uno y luego el otro: se turnan (La Sonriente, El Asomado, La Sonriente...)
+    EnemigoBase ultimoSoltado;
+    EnemigoBase Siguiente(List<EnemigoBase> libres)
+    {
+        EnemigoBase e = libres.Find(x => x != ultimoSoltado);
+        if (e == null) e = libres[0];
+        ultimoSoltado = e;
+        return e;
     }
 }

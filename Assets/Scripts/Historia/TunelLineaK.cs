@@ -41,6 +41,8 @@ public class TunelLineaK : MonoBehaviour
         fuente.spatialBlend = 1f; fuente.minDistance = 3f; fuente.maxDistance = 30f;
         CrearRampas();
         EntradaVisible();
+        distanciaMaxima = Mathf.Max(distanciaMaxima, 25f);
+        if (interior != null && MetroTunel.Instancia == null) MetroTunel.Crear(this);
         // un poco más de luz en el andén (antes casi no se veía)
         if (luces != null) foreach (Light l in luces) if (l != null) { l.intensity *= 1.5f; l.range *= 1.25f; }
     }
@@ -99,7 +101,7 @@ public class TunelLineaK : MonoBehaviour
         Camera cam = Camera.main;
         if (cam == null) return;
         Vector3 a = marca.position - cam.transform.position;
-        bool apuntando = a.magnitude < distanciaMaxima && Vector3.Angle(cam.transform.forward, a) < 12f;
+        bool apuntando = a.magnitude < distanciaMaxima && Vector3.Angle(cam.transform.forward, a) < 18f;
         alumbrado = apuntando ? alumbrado + Time.deltaTime : Mathf.Max(0f, alumbrado - Time.deltaTime);
         if (alumbrado > segundosAlumbrando) StartCoroutine(Revelar());
     }
@@ -202,7 +204,7 @@ public class TunelLineaK : MonoBehaviour
         yield return new WaitForSeconds(8f);
         while (JugadorDentro)
         {
-            if (HorrorGameState.PuedeJugar && !DialogoUI.Activo) yield return Embestida();
+            if (HorrorGameState.PuedeJugar && !DialogoUI.Activo && !MetroTunel.PeleaActiva) yield return Embestida();
             yield return new WaitForSeconds(Random.Range(15f, 25f));
         }
         sustosCorriendo = false;
@@ -212,7 +214,8 @@ public class TunelLineaK : MonoBehaviour
     {
         EnemigoBase[] todos = FindObjectsByType<EnemigoBase>(FindObjectsInactive.Include);
         EnemigoBase e = null;
-        foreach (EnemigoBase x in todos) if (x != null && !x.MuertoParaSiempre && x.EstadoActual == EnemigoBase.Estado.Inactivo) { e = x; break; }
+        foreach (EnemigoBase x in todos) if (x != null && x.enabled && !x.MuertoParaSiempre && x.EstadoActual == EnemigoBase.Estado.Inactivo) { e = x; break; }
+        if (MetroTunel.PeleaActiva) yield break;
         if (e == null) yield break;
 
         // un punto lejos de ti (al fondo de las vías o al inicio del andén)

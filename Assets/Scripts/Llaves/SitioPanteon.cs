@@ -27,6 +27,7 @@ public class SitioPanteon : SitioLlave
     public override string ObjetivoLlegar => "Llave 2: el panteón";
 
     public bool CriptaAbierta { get; private set; }
+    protected override bool RetoHecho => CriptaAbierta || abriendo;
     int prendidasVistas;
     bool abriendo;
 
@@ -66,6 +67,13 @@ public class SitioPanteon : SitioLlave
             if (rejaCripta != null) rejaCripta.Abrir();
         }
         CriptaAbierta = true;
+        if (llave != null)
+        {
+            GameObject lz = new GameObject("LuzCripta");
+            lz.transform.position = llave.transform.position + Vector3.up * 1.2f;
+            Light l = lz.AddComponent<Light>(); l.type = LightType.Point; l.range = 6f; l.intensity = 2.2f; l.color = new Color(1f, 0.55f, 0.25f);
+            if (LlavesBucle.Instancia != null) { LlavesBucle.Instancia.destino = llave.transform; LlavesBucle.Instancia.nombreDestino = "LLAVE 2"; }
+        }
         DialogoUI.Susurrar("", "La reja de la cripta... se abrió sola. Y algo más despertó.", 3.5f);
         DialogoUI.NuevoObjetivo("Entra a la cripta y toma la llave");
         // Los dos se activan: uno ya viene y el otro acecha

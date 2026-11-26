@@ -69,6 +69,43 @@ public class PruebaArreglos : MonoBehaviour
             r.AppendLine("Campamento: fogata prendida = " + (f != null && f.Prendida) + ", llave disponible = " + (camp.llave != null && camp.llave.Disponible));
         }
 
+        // 2b) Carro: arranca, alarma y espanta a un monstruo cercano
+        CarroCampamento carro = FindAnyObjectByType<CarroCampamento>();
+        r.AppendLine("Carro creado = " + (carro != null));
+        if (carro != null)
+        {
+            Ir(pm, carro.transform.position + carro.transform.forward * 5f, carro.transform.position);
+            yield return new WaitForSecondsRealtime(0.8f);
+            EnemigoBase mon = FindAnyObjectByType<LaSonriente>();
+            if (mon != null) { mon.ActivarEn(carro.transform.position + carro.transform.right * 8f); }
+            yield return new WaitForSecondsRealtime(0.3f);
+            bool antes = mon != null && mon.Activo;
+            carro.StartCoroutine((IEnumerator)typeof(CarroCampamento).GetMethod("Arrancar", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(carro, null));
+            yield return new WaitForSecondsRealtime(1.5f);
+            yield return Foto("03b_carro_alarma");
+            r.AppendLine("Carro: encendido = " + carro.Encendido + ", monstruo activo antes = " + antes + ", después = " + (mon != null && mon.Activo));
+            yield return new WaitForSecondsRealtime(1f);
+        }
+
+        // 2c) Monstruo de cerca (animación con vida)
+        EnemigoBase m2 = FindAnyObjectByType<ElAsomado>();
+        if (m2 != null)
+        {
+            m2.Reiniciar();
+            Ir(pm, pm.transform.position, pm.transform.position + pm.transform.forward);
+            typeof(EnemigoBase).GetMethod("Mostrar", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(m2, new object[] { true });
+            m2.enabled = false;
+            m2.transform.position = Mundo.EnSuelo(pm.transform.position + pm.transform.forward * 4f);
+            m2.transform.rotation = Quaternion.LookRotation(-pm.transform.forward);
+            yield return new WaitForSecondsRealtime(1.2f);
+            yield return Foto("03c_monstruo_vivo_a");
+            yield return new WaitForSecondsRealtime(1.3f);
+            yield return Foto("03d_monstruo_vivo_b");
+            r.AppendLine("Monstruo con EnemigoVida = " + (m2.GetComponent<EnemigoVida>() != null));
+            typeof(EnemigoBase).GetMethod("Mostrar", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(m2, new object[] { false });
+            m2.enabled = true; m2.Reiniciar();
+        }
+
         // 3) Arma en la mano y golpe
         PlayerCombate pc = pm.GetComponent<PlayerCombate>();
         ArmaRecogible arma = FindAnyObjectByType<ArmaRecogible>();
@@ -111,6 +148,31 @@ public class PruebaArreglos : MonoBehaviour
             yield return Foto("07_rampa_desde_vias");
             yield return t.StartCoroutine((IEnumerator)typeof(TunelLineaK).GetMethod("Embestida", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(t, null));
             r.AppendLine("Túnel: embestida terminada; vida del jugador = " + (SaludJugador.Instancia != null ? SaludJugador.Instancia.Vida.ToString("0") : "?"));
+        }
+
+        // 6) Metro: entrar al vagón → pelea → luces → vencerla → llave
+        MetroTunel mt = MetroTunel.Instancia;
+        r.AppendLine("Metro creado = " + (mt != null));
+        if (mt != null && t != null)
+        {
+            if (SaludJugador.Instancia != null) SaludJugador.Instancia.Curar(100f);
+            Ir(pm, t.interior.TransformPoint(new Vector3(1.1f, 1.05f, 9f)), t.interior.TransformPoint(new Vector3(1.1f, 1.5f, 15f)));
+            yield return new WaitForSecondsRealtime(3.5f);
+            r.AppendLine("Metro: pelea activa al entrar = " + MetroTunel.PeleaActiva);
+            yield return Foto("08_pelea_metro");
+            float d0 = mt.DanioHecho;
+            mt.RecibirGolpe(40f, pm.transform.position);
+            r.AppendLine("Metro: golpe de 40 a oscuras → daño real = " + (mt.DanioHecho - d0).ToString("0"));
+            foreach (CajaFusibles c in mt.Cajas) { c.PrenderYa(); yield return new WaitForSecondsRealtime(0.5f); }
+            yield return Foto("09_metro_luces");
+            d0 = mt.DanioHecho;
+            mt.RecibirGolpe(40f, pm.transform.position);
+            r.AppendLine("Metro: golpe de 40 con luces → daño real = " + (mt.DanioHecho - d0).ToString("0"));
+            for (int i = 0; i < 6 && MetroTunel.PeleaActiva; i++) { mt.RecibirGolpe(40f, pm.transform.position); yield return new WaitForSecondsRealtime(0.4f); }
+            yield return new WaitForSecondsRealtime(2.5f);
+            SitioTunel st = t.GetComponent<SitioTunel>();
+            r.AppendLine("Metro: vencida = " + mt.Vencida + ", llave disponible = " + (st != null && st.llave != null && st.llave.Disponible));
+            yield return Foto("10_llave_vagon");
         }
 
         r.Insert(0, "Errores/excepciones: " + errores + "\n\n");

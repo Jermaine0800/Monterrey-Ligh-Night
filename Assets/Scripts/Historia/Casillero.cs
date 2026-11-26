@@ -42,7 +42,7 @@ public class Casillero : MonoBehaviour, IInteractable
             l.duracionBateria *= 1.6f;
         }
         if (llave != null) llave.Disponible = true;
-        DialogoUI.Susurrar("", "Batería de alto rendimiento... y una llave.", 3.5f);
+        DialogoUI.Susurrar("", llave != null ? "Batería de alto rendimiento... y una llave." : "Batería de alto rendimiento. Y un papel: \"EL VAGÓN\".", 3.5f);
         StartCoroutine(DocumentoUI.Mostrar(TituloDocumento, CuerpoDocumento, 1.5f));
     }
 }

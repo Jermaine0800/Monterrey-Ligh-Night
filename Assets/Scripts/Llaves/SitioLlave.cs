@@ -24,6 +24,11 @@ public abstract class SitioLlave : MonoBehaviour
     public float esperaMonstruo = 240f;
 
     public bool Completado { get; protected set; }
+    /// <summary>El lugar que la historia está jugando ahorita (los demás se pueden visitar en cualquier orden).</summary>
+    public static SitioLlave Actual { get; private set; }
+    bool llegadaVista;
+    /// <summary>Ya se resolvió el reto de este lugar (para no explicarlo otra vez).</summary>
+    protected virtual bool RetoHecho => false;
 
     /// <summary>Lo que dice el Vigía cuando te manda hacia acá (al terminar el lugar anterior).</summary>
     public abstract string[] LineasPartida { get; }
@@ -36,6 +41,7 @@ public abstract class SitioLlave : MonoBehaviour
     /// <summary>Flujo completo del lugar. Normalmente no se sobreescribe; se sobreescribe <see cref="Reto"/>.</summary>
     public virtual IEnumerator Jugar(MisionManager h)
     {
+        Actual = this;
         LlavesBucle hud = LlavesBucle.Instancia;
         if (hud != null) { hud.destino = transform; hud.nombreDestino = nombreLugar.ToUpper(); }
 
@@ -47,8 +53,9 @@ public abstract class SitioLlave : MonoBehaviour
 
         // 2) Te espera en la entrada (solo cuando ya estás cerca)
         yield return h.EsperarHasta(() => h.Distancia(transform.position) < radioLlegada + 25f);
-        if (!string.IsNullOrEmpty(VozAlLlegar)) VozProtagonista.Decir(VozAlLlegar, 0f);
-        if (puntoVigia != null && LineasLlegada != null && LineasLlegada.Length > 0)
+        bool yaVista = llegadaVista; llegadaVista = true;
+        if (!yaVista && !string.IsNullOrEmpty(VozAlLlegar)) VozProtagonista.Decir(VozAlLlegar, 0f);
+        if (!yaVista && puntoVigia != null && LineasLlegada != null && LineasLlegada.Length > 0)
             yield return h.EscenaVigia(puntoVigia.position, GuiaController.Pose.Sentado, LineasLlegada, false, 40f);
         yield return h.EsperarHasta(() => h.Distancia(transform.position) < radioLlegada);
 
@@ -115,5 +122,30 @@ public abstract class SitioLlave : MonoBehaviour
             if (d != null && !d.HayMonstruoActivo) { d.ForzarEn(h.Jugador.position); yield break; }
             yield return new WaitForSeconds(3f);
         }
+    }
+
+    // ================================================================== Llegar en cualquier orden
+    // Si llegas a un lugar que todavía no te tocaba: cinemática del lugar, el Vigía te explica qué hacer
+    // y te avisa de las notas. Así cada punto tiene su presentación aunque explores libre.
+    void LateUpdate()
+    {
+        if (llegadaVista || Completado || Actual == this || RetoHecho || (llave != null && llave.Tomada)) return;
+        if (SaludJugador.Instancia == null || !HorrorGameState.PuedeJugar || DialogoUI.Activo) return;
+        Vector3 a = transform.position - SaludJugador.Instancia.transform.position; a.y = 0;
+        if (a.magnitude > radioLlegada + 12f) return;
+        llegadaVista = true;
+        MisionManager mm = MisionManager.Instancia;
+        if (mm != null) mm.StartCoroutine(LlegadaLibre(mm));
+    }
+
+    IEnumerator LlegadaLibre(MisionManager h)
+    {
+        yield return h.CinematicaLugar(transform, nombreLugar);
+        if (!string.IsNullOrEmpty(VozAlLlegar)) VozProtagonista.Decir(VozAlLlegar, 0f);
+        if (puntoVigia != null && LineasLlegada != null && LineasLlegada.Length > 0)
+            yield return h.EscenaVigia(puntoVigia.position, GuiaController.Pose.Sentado, LineasLlegada, false, 40f);
+        if (notaAyer != null && !notaAyer.Leida)
+            DialogoUI.Susurrar("", "Hay dos hojas juntas por aquí... con mi letra. Léelas: dicen qué hacer.   [A / E]", 4.5f);
+        h.StartCoroutine(Presencia(h));
     }
 }

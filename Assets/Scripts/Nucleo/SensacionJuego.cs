@@ -14,6 +14,20 @@ public class SensacionJuego : MonoBehaviour
     float semilla;
     float vidaAnterior = -1f;
     bool enPausa;
+    Vector3 ultimoDesfase;
+    Quaternion ultimoGiro = Quaternion.identity;
+    Camera camAplicada;
+
+    // Antes de que la cámara se acomode, quitar la sacudida del cuadro anterior (para que nunca se acumule)
+    void Update()
+    {
+        if (camAplicada != null)
+        {
+            camAplicada.transform.rotation = camAplicada.transform.rotation * Quaternion.Inverse(ultimoGiro);
+            camAplicada.transform.position -= ultimoDesfase;
+        }
+        camAplicada = null; ultimoDesfase = Vector3.zero; ultimoGiro = Quaternion.identity;
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Crear()
@@ -66,8 +80,11 @@ public class SensacionJuego : MonoBehaviour
         float t = Time.unscaledTime * 22f;
         Vector3 pos = new Vector3(Mathf.PerlinNoise(semilla, t) - 0.5f, Mathf.PerlinNoise(semilla + 1, t) - 0.5f, 0f) * 0.22f * k;
         float giro = (Mathf.PerlinNoise(semilla + 2, t) - 0.5f) * 7f * k;
-        cam.transform.position += cam.transform.rotation * pos;
-        cam.transform.rotation *= Quaternion.Euler(0f, 0f, giro);
+        ultimoDesfase = cam.transform.rotation * pos;
+        ultimoGiro = Quaternion.Euler(0f, 0f, giro);
+        cam.transform.position += ultimoDesfase;
+        cam.transform.rotation *= ultimoGiro;
+        camAplicada = cam;
         trauma = Mathf.Max(0f, trauma - Time.unscaledDeltaTime * 1.3f);
     }
 }

@@ -64,6 +64,7 @@ public abstract class EnemigoBase : Entidad, IReiniciable
 
     protected virtual void Start()
     {
+        if (GetComponent<EnemigoVida>() == null) gameObject.AddComponent<EnemigoVida>();   // que no se vean tiesos
         Mostrar(false);
     }
 

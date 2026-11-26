@@ -78,10 +78,11 @@ public class MapaRadial : MonoBehaviour
         Image m = HorrorUI.CrearImagen(sombra.transform, "Relleno", new Color(0.95f, 0.78f, 0.38f));
         m.rectTransform.anchorMin = Vector2.zero; m.rectTransform.anchorMax = Vector2.one;
         m.rectTransform.offsetMin = new Vector2(3, 3); m.rectTransform.offsetMax = new Vector2(-3, -3);
-        string etq = sitio != null ? (System.Array.IndexOf(FindAnyObjectByType<MisionManager>().sitios, sitio) + 1).ToString() : "SALIDA";
-        Text t = HorrorUI.CrearTexto(marco, "Etiqueta_" + lugar.name, etq, 18, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
+        string etq = sitio != null ? (System.Array.IndexOf(FindAnyObjectByType<MisionManager>().sitios, sitio) + 1) + " " + Corto(sitio.nombreLugar) : "SALIDA";
+        Text t = HorrorUI.CrearTexto(marco, "Etiqueta_" + lugar.name, etq, 13, Color.white, TextAnchor.MiddleCenter, FontStyle.Bold);
         t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-        t.rectTransform.sizeDelta = new Vector2(80, 22);
+        t.rectTransform.sizeDelta = new Vector2(150, 20);
+        Outline o = t.gameObject.AddComponent<Outline>(); o.effectColor = Color.black; o.effectDistance = new Vector2(1, -1);
         marcas.Add((lugar, m, sitio, t));
     }
 
@@ -176,5 +177,12 @@ public class MapaRadial : MonoBehaviour
         }
         tex.Apply();
         return tex;
+    }
+
+    static string Corto(string n)
+    {
+        if (string.IsNullOrEmpty(n)) return "";
+        string u = n.ToUpperInvariant().Replace("CAMPAMENTO", "CAMPAM.").Replace("ESTACIÓN", "EST.");
+        return u.Length > 12 ? u.Substring(0, 12) : u;
     }
 }

@@ -13,6 +13,7 @@ public class PuertaTeleport : MonoBehaviour, IInteractable
     public void Interact(PlayerInteraction jugador)
     {
         if (usando || destino == null) return;
+        if (MetroTunel.PeleaActiva) { DialogoUI.Susurrar("", "¡No abre! Está trabada... tengo que quitármela de encima.", 2.5f); return; }
         PlayerMovement m = jugador.GetComponent<PlayerMovement>();
         if (m == null) return;
         StartCoroutine(Cruzar(m));
