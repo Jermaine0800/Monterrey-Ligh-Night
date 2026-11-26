@@ -1,60 +1,217 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
+/// <summary>
+/// Cámara en tercera o primera persona (R3 / V para cambiar).
+/// - Tercera: orbita detrás del personaje y no atraviesa paredes ni terreno.
+/// - Primera: a la altura de los ojos; el cuerpo se ve solo como sombra.
+/// Durante diálogos la cámara voltea sola hacia quien habla.
+/// </summary>
 public class CameraController : MonoBehaviour
 {
-    public Transform objetivo;          // a quién sigue la cámara (el X Bot)
-    public float altura = 1.6f;         // qué tan arriba del piso está el punto de giro
+    public Transform objetivo;          // el personaje
+    public float altura = 1.6f;         // punto de giro en tercera persona
+    public float distancia = 2.5f;      // qué tan atrás se aleja la cámara
     public float sensibilidad = 120f;   // qué tan rápido gira con el stick
-    public float minVertical = -30f;    // límite para mirar hacia arriba
-    public float maxVertical = 60f;     // límite para mirar hacia abajo
+    public float minVertical = -30f;
+    public float maxVertical = 60f;
 
-    private float giroHorizontal;       // ángulo izquierda/derecha
-    private float giroVertical = 15f;   // ángulo arriba/abajo
+    [Header("Primera persona")]
+    public float alturaOjos = 1.62f;
+    public float alturaOjosAgachado = 1.0f;
+    public float adelanteOjos = 0.12f;
+
+    [Header("Colisión de cámara (tercera persona)")]
+    public float radioColision = 0.25f;
+    public LayerMask capasColision = ~0;
+
+    public bool EnPrimeraPersona => primeraPersona;
+
+    float giroHorizontal;
+    float giroVertical = 15f;
+    float distanciaActual;
+    float alturaOjosActual;
+    bool primeraPersona, forzada;
+    Transform enfoque;
+    PlayerMovement movimiento;
+    Renderer[] cuerpo;
+
+    public void Enfocar(Transform t) { enfoque = t; }
+
+    // Escondido: la cámara se queda quieta en un punto (solo puedes asomarte girando un poco)
+    bool fijada; Vector3 ojoFijo; float yawCentro, yawRango;
+    public void FijarOjos(Vector3 pos, float yaw, float rango)
+    {
+        fijada = true; ojoFijo = pos; yawCentro = yaw; yawRango = rango;
+        giroHorizontal = yaw; giroVertical = 0f;
+        transform.position = pos;
+    }
+    public void SoltarOjos() { fijada = false; }
+
+    /// <summary>
+    /// Algunos modelos importados traen su propia cámara (p. ej. "PS2_Cam" dentro del guía)
+    /// y le ganan a la del jugador. Aquí apagamos cualquier otra cámara que dibuje a pantalla.
+    /// </summary>
+    void AsegurarCamaraUnica(Camera mia)
+    {
+        if (mia == null) return;
+        mia.tag = "MainCamera";
+        mia.enabled = true;
+        foreach (Camera c in FindObjectsByType<Camera>(FindObjectsInactive.Exclude))
+        {
+            if (c == mia || c.targetTexture != null || c.transform.IsChildOf(transform)) continue;
+            c.enabled = false;
+            if (c.CompareTag("MainCamera")) c.tag = "Untagged";
+            Debug.Log("[Cámara] Apagué la cámara extra: " + c.name);
+        }
+        // Luz de la videocámara: un relleno tenue para que el senderista no sea una mancha negra
+        if (mia.transform.Find("LuzVideocamara") == null)
+        {
+            GameObject g = new GameObject("LuzVideocamara");
+            g.transform.SetParent(mia.transform, false);
+            Light l = g.AddComponent<Light>();
+            l.type = LightType.Point;
+            l.range = 10f;
+            l.intensity = 2.2f;
+            l.color = new Color(0.85f, 0.88f, 1f);
+            l.shadows = LightShadows.None;
+        }
+
+        AudioListener oido = mia.GetComponent<AudioListener>();
+        if (oido == null) oido = mia.gameObject.AddComponent<AudioListener>();
+        foreach (AudioListener a in FindObjectsByType<AudioListener>(FindObjectsInactive.Exclude))
+            if (a != oido) a.enabled = false;
+    }
 
     void Start()
     {
         if (objetivo != null)
         {
             giroHorizontal = objetivo.eulerAngles.y;
+            movimiento = objetivo.GetComponent<PlayerMovement>();
+        }
+        // La cámara hija tenía un desplazamiento propio; lo sumamos aquí para que este script la controle por completo
+        Camera hija = GetComponentInChildren<Camera>();
+        if (hija != null && hija.transform != transform)
+        {
+            distancia += Mathf.Max(0f, -hija.transform.localPosition.z);
+            altura += hija.transform.localPosition.y;
+            hija.transform.localPosition = Vector3.zero;
+            hija.transform.localRotation = Quaternion.identity;
+            hija.nearClipPlane = 0.05f;
+        }
+        AsegurarCamaraUnica(hija != null ? hija : GetComponent<Camera>());
+        sensibilidad = PlayerPrefs.GetFloat("sensibilidad", sensibilidad); // desde Opciones del menú
+        primeraPersona = PlayerPrefs.GetInt("primera_persona", 0) == 1;
+        distanciaActual = distancia;
+        alturaOjosActual = alturaOjos;
+        AplicarModo();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    /// <summary>Por ejemplo al esconderse: forzar primera persona aunque el jugador use tercera.</summary>
+    public void ForzarPrimeraPersona(bool valor)
+    {
+        forzada = valor;
+        primeraPersona = valor || PlayerPrefs.GetInt("primera_persona", 0) == 1;
+        AplicarModo();
+    }
+
+    /// <summary>Si se cambia el modelo del jugador, hay que volver a buscar sus renderers.</summary>
+    public void RefrescarCuerpo()
+    {
+        cuerpo = null;
+        AplicarModo();
+    }
+
+    void AplicarModo()
+    {
+        if (objetivo == null) return;
+        if (movimiento == null) movimiento = objetivo.GetComponent<PlayerMovement>();
+        if (movimiento != null) movimiento.PrimeraPersona = primeraPersona;
+        if (cuerpo == null) cuerpo = objetivo.GetComponentsInChildren<Renderer>(true);
+        foreach (Renderer r in cuerpo)
+        {
+            if (r == null || r is ParticleSystemRenderer || r.GetComponentInParent<Light>() != null) continue;
+            // En primera persona el cuerpo solo proyecta sombra (no tapa la vista)
+            if (r is SkinnedMeshRenderer)
+                r.shadowCastingMode = primeraPersona ? UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly
+                                                     : UnityEngine.Rendering.ShadowCastingMode.On;
         }
     }
 
     void LateUpdate()
     {
         if (objetivo == null) return;
+        // En la web (y al volver de la pausa) el navegador suelta el ratón con Esc: un clic lo vuelve a capturar
+        if (HorrorGameState.PuedeJugar && Cursor.lockState != CursorLockMode.Locked &&
+            UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
+        { Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false; }
 
-        // Ponerse donde está el personaje, un poco arriba
-        transform.position = objetivo.position + Vector3.up * altura;
-
-        // Leer el stick derecho (solo si hay control conectado)
-        if (Gamepad.current != null)
+        // Cambiar de cámara (R3)
+        if (!forzada && HorrorGameState.PuedeJugar && HorrorInput.CambiarCamara)
         {
-            Vector2 mirada = Gamepad.current.rightStick.ReadValue();
-            giroHorizontal += mirada.x * sensibilidad * Time.deltaTime;
-            giroVertical -= mirada.y * sensibilidad * Time.deltaTime;
-            giroVertical = Mathf.Clamp(giroVertical, minVertical, maxVertical);
+            primeraPersona = !primeraPersona;
+            PlayerPrefs.SetInt("primera_persona", primeraPersona ? 1 : 0);
+            AplicarModo();
+            VHSOverlay.Glitch(0.2f, 0.1f);
         }
 
-        // 3. Aplicar el giro
-        transform.rotation = Quaternion.Euler(giroVertical, giroHorizontal, 0f);
-    }
-}
-
-    /*/
-    void Update()
-    {
-        if (Gamepad.current == null)
+        // 1. Stick derecho
+        if (HorrorGameState.PuedeJugar)
         {
-            Debug.Log("No hay controlador conectado");
+            Vector2 mirada = HorrorInput.Mirar;
+            Vector2 raton = HorrorInput.MirarRaton * 0.09f * (sensibilidad / 120f);   // grados por píxel, igual a cualquier FPS
+            float inv = HorrorInput.InvertirY ? -1f : 1f;
+            giroHorizontal += mirada.x * sensibilidad * Time.deltaTime + raton.x;
+            giroVertical -= (mirada.y * sensibilidad * Time.deltaTime + raton.y) * inv;
+            float min = primeraPersona ? -75f : minVertical;
+            float max = primeraPersona ? 75f : maxVertical;
+            giroVertical = Mathf.Clamp(giroVertical, min, max);
+        }
+
+        // 1b. Durante un diálogo la cámara gira sola hacia quien habla
+        if (enfoque != null)
+        {
+            Vector3 d = enfoque.position - objetivo.position; d.y = 0;
+            if (d.sqrMagnitude > 0.01f)
+            {
+                float angulo = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg;
+                giroHorizontal = Mathf.LerpAngle(giroHorizontal, angulo, 2.5f * Time.unscaledDeltaTime);
+                giroVertical = Mathf.Lerp(giroVertical, primeraPersona ? -5f : 6f, 2f * Time.unscaledDeltaTime);
+            }
+        }
+
+        if (fijada)
+        {
+            giroHorizontal = yawCentro + Mathf.Clamp(Mathf.DeltaAngle(yawCentro, giroHorizontal), -yawRango, yawRango);
+            giroVertical = Mathf.Clamp(giroVertical, -25f, 30f);
+            transform.rotation = Quaternion.Euler(giroVertical, giroHorizontal, 0f);
+            transform.position = ojoFijo;
             return;
         }
 
-        Vector2 mirada = Gamepad.current.rightStick.ReadValue();
+        Quaternion rotacion = Quaternion.Euler(giroVertical, giroHorizontal, 0f);
+        transform.rotation = rotacion;
 
-        Debug.Log(mirada);
+        if (primeraPersona)
+        {
+            bool agachado = movimiento != null && movimiento.Agachado;
+            alturaOjosActual = Mathf.Lerp(alturaOjosActual, agachado ? alturaOjosAgachado : alturaOjos, 8f * Time.deltaTime);
+            Vector3 frente = objetivo.forward; frente.y = 0;
+            transform.position = objetivo.position + Vector3.up * alturaOjosActual + frente.normalized * adelanteOjos;
+        }
+        else
+        {
+            // 3. Pivote y distancia, sin atravesar terreno/paredes
+            Vector3 pivote = objetivo.position + Vector3.up * altura;
+            Vector3 atras = rotacion * Vector3.back;
+            float deseada = distancia;
+            if (Physics.SphereCast(pivote, radioColision, atras, out RaycastHit hit, distancia, capasColision, QueryTriggerInteraction.Ignore)
+                && !hit.transform.IsChildOf(objetivo))
+                deseada = Mathf.Max(0.3f, hit.distance - 0.05f);
+            distanciaActual = Mathf.Lerp(distanciaActual, deseada, (deseada < distanciaActual ? 20f : 4f) * Time.deltaTime);
+            transform.position = pivote + atras * distanciaActual;
+        }
     }
-
-    */
-
-
+}

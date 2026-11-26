@@ -1,0 +1,15 @@
+PSX Forest Camp Starter Pack - License
+Copyright (c) 2026 Nickben12
+
+You MAY:
+  - Use these assets in unlimited personal and commercial projects
+    (games, apps, videos, renders, prototypes...), royalty free.
+  - Modify, recolour and combine the assets for use in your projects.
+
+You may NOT:
+  - Resell, redistribute, share or sublicense the assets themselves, original or
+    modified, as stand-alone files or as part of another asset pack, template or library.
+  - Claim the assets as your own creation.
+  - Use the assets as training data for AI / machine-learning models.
+
+Credit is appreciated but not required: "PSX Forest Camp Starter Pack by Nickben12".

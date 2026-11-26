@@ -1,0 +1,22 @@
+html, body { margin: 0; height: 100%; background: #000; color: #d9cfb8; font-family: "Courier New", monospace; overflow: hidden; }
+#marco { position: fixed; inset: 0 0 44px 0; display: grid; place-items: center; background: #000; }
+#unity-canvas { width: 100%; height: 100%; display: block; background: #000; outline: none; }
+#carga, #error { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; background: #000; text-align: center; padding: 1rem; }
+#carga h1 { font-size: clamp(1.6rem, 5vw, 3.4rem); letter-spacing: .1em; margin: .2em 0; text-shadow: 3px 0 rgba(176,40,30,.8), -3px 0 rgba(60,140,255,.5); }
+.rec { position: absolute; top: 16px; left: 20px; margin: 0; font-size: 1.4rem; display: flex; gap: .4rem; align-items: center; }
+.rec span { width: 12px; height: 12px; background: #e0241a; animation: p 1s steps(1) infinite; }
+@keyframes p { 50% { opacity: 0; } }
+.barra { width: min(520px, 80vw); height: 14px; border: 2px solid #d9cfb8; padding: 2px; }
+#relleno { height: 100%; width: 0; background: repeating-linear-gradient(90deg, #d9cfb8 0 10px, transparent 10px 14px); transition: width .2s; }
+.tip { opacity: .55; font-size: .9rem; max-width: 640px; }
+#error { color: #ffb3aa; }
+#error[hidden] { display: none; }
+#error a { color: #fff; }
+#barra-abajo { position: fixed; left: 0; right: 0; bottom: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: #0b0b0b; border-top: 1px solid #222; font-size: .95rem; }
+#barra-abajo a, #barra-abajo button { color: #d9cfb8; background: none; border: 1px solid #444; padding: 4px 10px; font: inherit; cursor: pointer; text-decoration: none; }
+#barra-abajo a:hover, #barra-abajo button:hover { border-color: #b0281e; color: #fff; }
+@media (max-width: 600px) { #barra-abajo span { display: none; } }
+body.celular #barra-abajo span { display: none; }
+body.celular #barra-abajo { height: 36px; }
+body.celular #marco { inset: 0 0 36px 0; }
+@media (orientation: portrait) { body.celular #carga::after { content: "↻ Gira tu celular"; font-size: 1.4rem; margin-top: 1rem; color: #fff; } }
