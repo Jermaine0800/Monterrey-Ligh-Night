@@ -61,6 +61,44 @@ public class AcechoDirector : MonoBehaviour
         respiracion = ProceduralAudio.Respiracion(9);
     }
 
+    int llavesTomadas;
+    InventoryUI inventarioUI;
+    bool autoEncendido;
+    float tiempoConMochila;
+
+    /// <summary>
+    /// Cada llave que tomas despierta algo: susto inmediato y un monstruo te busca.
+    /// Además cada llave hace que salgan más seguido.
+    /// </summary>
+    public void SustoPorLlave()
+    {
+        llavesTomadas++;
+        habilitado = true;
+        tensionParaSoltarMonstruo = Mathf.Max(10f, 26f - llavesTomadas * 3.5f);
+        esperaTrasMonstruo = Mathf.Max(7f, 18f - llavesTomadas * 2.5f);
+        cadaCuantoSenal = Mathf.Max(3f, 6f - llavesTomadas * 0.6f);
+        StartCoroutine(RutinaSustoLlave());
+    }
+
+    System.Collections.IEnumerator RutinaSustoLlave()
+    {
+        yield return new WaitForSeconds(1.6f);
+        if (jugador == null) yield break;
+        TunelLineaK t = FindAnyObjectByType<TunelLineaK>();
+        if (t != null && t.JugadorDentro) yield break;          // en el túnel hay sus propios sustos
+        VHSOverlay.Glitch(0.8f, 0.7f);
+        HorrorInput.Vibrar(0.5f, 0.9f, 0.5f, this);
+        if (fuente != null && respiracion != null)
+        {
+            fuente.transform.position = jugador.position - (Camera.main != null ? Camera.main.transform.forward : jugador.forward) * 2f;
+            fuente.PlayOneShot(respiracion, 0.9f);
+        }
+        DialogoUI.Susurrar("", "...la llave estaba tibia. Alguien la estaba cuidando.", 3f);
+        yield return new WaitForSeconds(1.2f);
+        if (actual != null && actual.Activo) yield break;
+        ForzarEn(jugador.position);
+    }
+
     public void Habilitar(bool v)
     {
         habilitado = v;
@@ -75,8 +113,18 @@ public class AcechoDirector : MonoBehaviour
             if (mov == null) return;
             jugador = mov.transform;
         }
+        SustosAlAcercarte();
+
+        // Seguro: si exploras por tu cuenta (sin seguir el sendero del Vigía), después de un rato con la mochila ya te siguen
+        if (!habilitado && !autoEncendido && HorrorGameState.PuedeJugar)
+        {
+            if (inventarioUI == null) inventarioUI = FindAnyObjectByType<InventoryUI>();
+            if (inventarioUI != null && inventarioUI.hasBackPack) tiempoConMochila += Time.deltaTime;
+            if (tiempoConMochila > 75f) { autoEncendido = true; habilitado = true; }
+        }
         if (!habilitado || !HorrorGameState.PuedeJugar || DialogoUI.Activo) return;
-        if (actual != null) return;
+        Eventos();
+        if (actual != null) { SegundoMonstruo(); return; }
 
         if (enfriamiento > 0f) { enfriamiento -= Time.deltaTime; return; }
 
@@ -185,5 +233,99 @@ public class AcechoDirector : MonoBehaviour
         latido.volume = Mathf.MoveTowards(latido.volume, objetivo * 0.9f, Time.deltaTime);
         latido.pitch = 1f + objetivo * 0.6f;
         if (objetivo > 0.6f && Random.value < 0.01f) VHSOverlay.Glitch(objetivo * 0.4f, 0.15f);
+    }
+
+    // ================================================================== Sustos al acercarte a cada lugar
+    // Mientras te acercas a un lugar donde todavía está la llave, algo se deja ver entre los árboles
+    // (solo para asustarte: desaparece en cuanto lo miras). Cuando tomas la llave, ahí sí te persiguen.
+
+    SitioLlave[] sitios;
+    float siguienteRevision, siguienteAsomo;
+
+    void SustosAlAcercarte()
+    {
+        if (Time.time < siguienteRevision || jugador == null || !HorrorGameState.PuedeJugar || DialogoUI.Activo) return;
+        siguienteRevision = Time.time + 1f;
+        if (sitios == null) sitios = FindObjectsByType<SitioLlave>(FindObjectsInactive.Exclude);
+        if (Time.time < siguienteAsomo || (actual != null && actual.Activo)) return;
+        TunelLineaK t = FindAnyObjectByType<TunelLineaK>();
+        if (t != null && t.JugadorDentro) return;
+
+        foreach (SitioLlave s in sitios)
+        {
+            if (s == null || s.Completado || (s.llave != null && s.llave.Tomada)) continue;
+            Vector3 a = s.transform.position - jugador.position; a.y = 0;
+            if (a.magnitude > s.radioLlegada + 35f) continue;
+
+            EnemigoBase e = enemigos.Find(x => x != null && x.EstadoActual == EnemigoBase.Estado.Inactivo && !x.MuertoParaSiempre);
+            if (e == null) return;
+            Transform cam = Camera.main != null ? Camera.main.transform : jugador;
+            Vector3 f = cam.forward; f.y = 0; f.Normalize();
+            Vector3 punto = jugador.position + Quaternion.Euler(0, Random.Range(-40f, 40f), 0) * f * Random.Range(12f, 18f);
+            StartCoroutine(e.Vistazo(punto, 6f));
+            StartCoroutine(Senal());
+            siguienteAsomo = Time.time + Random.Range(22f, 38f);
+            return;
+        }
+    }
+
+    // ================================================================== Más acción
+    float siguienteEvento = 40f, siguienteSegundo;
+    EnemigoBase segundo;
+
+    /// <summary>Con 2 llaves o más, a veces viene otro mientras el primero te persigue.</summary>
+    void SegundoMonstruo()
+    {
+        if (llavesTomadas < 2 || Time.time < siguienteSegundo || !actual.Activo) return;
+        siguienteSegundo = Time.time + Random.Range(25f, 45f);
+        if (segundo != null && segundo.Activo) return;
+        if (Random.value > 0.25f + llavesTomadas * 0.1f) return;
+        TunelLineaK t = FindAnyObjectByType<TunelLineaK>();
+        if (t != null && t.JugadorDentro) return;
+        segundo = enemigos.Find(e => e != null && e != actual && e.EstadoActual == EnemigoBase.Estado.Inactivo && !e.MuertoParaSiempre);
+        if (segundo == null) return;
+        Vector2 r = Random.insideUnitCircle.normalized * Random.Range(14f, 20f);
+        segundo.ActivarEn(jugador.position + new Vector3(r.x, 0, r.y));
+        DialogoUI.Susurrar("", "...son dos. SON DOS.", 2.5f);
+        SensacionJuego.Sacudir(0.3f);
+    }
+
+    /// <summary>Que siempre esté pasando algo: cada 35–60 s un evento (algo te mira, un grito, la linterna falla, algo corre entre los árboles).</summary>
+    void Eventos()
+    {
+        if (Time.time < siguienteEvento || jugador == null) return;
+        siguienteEvento = Time.time + Random.Range(35f, 60f) - llavesTomadas * 4f;
+        TunelLineaK t = FindAnyObjectByType<TunelLineaK>();
+        if (t != null && t.JugadorDentro) return;
+        Transform cam = Camera.main != null ? Camera.main.transform : jugador;
+        Vector3 f = cam.forward; f.y = 0; f.Normalize();
+        float r = Random.value;
+        if (r < 0.4f)
+        {
+            EnemigoBase e = enemigos.Find(x => x != null && x.EstadoActual == EnemigoBase.Estado.Inactivo && !x.MuertoParaSiempre);
+            if (e != null) StartCoroutine(e.Vistazo(jugador.position + Quaternion.Euler(0, Random.Range(-50f, 50f), 0) * f * Random.Range(12f, 20f), 5f));
+        }
+        else if (r < 0.65f)
+        {
+            fuente.transform.position = jugador.position - f * Random.Range(15f, 25f);
+            fuente.PlayOneShot(ProceduralAudio.Grito(Random.Range(1, 99)), 1f);
+            SensacionJuego.Sacudir(0.15f);
+        }
+        else if (r < 0.85f) StartCoroutine(LinternaFalla());
+        else StartCoroutine(Senal());
+    }
+
+    System.Collections.IEnumerator LinternaFalla()
+    {
+        FlashlightController l = jugador.GetComponent<FlashlightController>();
+        Light luz = l != null ? l.GetComponentInChildren<Light>() : null;
+        VHSOverlay.Glitch(0.6f, 1.2f);
+        for (int i = 0; i < 8; i++)
+        {
+            foreach (Light x in jugador.GetComponentsInChildren<Light>()) if (x.type == LightType.Spot) x.intensity *= 0.1f;
+            yield return new WaitForSeconds(Random.Range(0.05f, 0.2f));
+            yield return null;   // el controlador de la linterna la restablece solo
+        }
+        DialogoUI.Susurrar("", "La linterna... no, no, no.", 2f);
     }
 }

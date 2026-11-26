@@ -13,4 +13,13 @@ public static class MonterreyTrailerSetup
         File.WriteAllText(Path.GetFullPath("Temp/tomas.flag"), "1");
         EditorApplication.isPlaying = true;
     }
+
+    [MenuItem("Monterrey/24. Probar arreglos (velas, fogata, arma, llaves, túnel)")]
+    public static void ProbarArreglos()
+    {
+        EditorSceneManager.SaveOpenScenes();
+        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        File.WriteAllText(Path.GetFullPath("Temp/prueba_arreglos.flag"), "1");
+        EditorApplication.isPlaying = true;
+    }
 }

@@ -28,6 +28,18 @@ public class SitioCampamento : SitioLlave
 
     public override string ObjetivoLlegar => "Llave 1: el campamento del equipo";
 
+    FogataCampamento fuego;
+
+    void Start()
+    {
+        if (fogata != null)
+        {
+            fuego = fogata.GetComponent<FogataCampamento>();
+            if (fuego == null) { fuego = fogata.gameObject.AddComponent<FogataCampamento>(); }
+            fuego.luz = fogata; fuego.sitio = this;
+        }
+    }
+
     protected override IEnumerator Reto(MisionManager h)
     {
         // El radio todavía transmite
@@ -41,13 +53,14 @@ public class SitioCampamento : SitioLlave
         yield return new WaitForSeconds(1.5f);
         DialogoUI.Susurrar("RADIO", "...¿alguien me copia? ...no suban al cerro... la luz... ¡NO ES EL GUÍA!...", 5f);
 
-        // La fogata se apaga sola
-        if (fogata != null)
+        // Hay que volver a prender la fogata: el fuego deja ver la llave
+        if (fuego != null && !fuego.Prendida)
         {
-            float i0 = fogata.intensity;
-            for (float t = 0; t < 3f; t += Time.deltaTime) { fogata.intensity = Mathf.Lerp(i0, 0.15f, t / 3f); yield return null; }
+            h.Objetivo("Prende la fogata  (mantén [A] junto al fuego)");
+            yield return h.EsperarHasta(() => fuego.Prendida);
+            yield return new WaitForSeconds(3f);
         }
-        h.Objetivo("Busca la llave con la linterna  [X]");
+        h.Objetivo("Toma la llave junto al fuego  [A]");
     }
 
     protected override IEnumerator AlTomarLlave(MisionManager h)

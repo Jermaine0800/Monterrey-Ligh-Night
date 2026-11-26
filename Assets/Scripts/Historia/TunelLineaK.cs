@@ -40,6 +40,7 @@ public class TunelLineaK : MonoBehaviour
         fuente = gameObject.AddComponent<AudioSource>();
         fuente.spatialBlend = 1f; fuente.minDistance = 3f; fuente.maxDistance = 30f;
         CrearRampas();
+        EntradaVisible();
         // un poco más de luz en el andén (antes casi no se veía)
         if (luces != null) foreach (Light l in luces) if (l != null) { l.intensity *= 1.5f; l.range *= 1.25f; }
     }
@@ -92,6 +93,7 @@ public class TunelLineaK : MonoBehaviour
             linterna = pm.GetComponent<FlashlightController>();
             if (linterna == null) linterna = FindAnyObjectByType<FlashlightController>();
         }
+        if (JugadorDentro && !sustosCorriendo) StartCoroutine(SustosTunel());
         if (Revelado || marca == null || linterna == null || !linterna.Encendida) return;
 
         Camera cam = Camera.main;
@@ -159,5 +161,113 @@ public class TunelLineaK : MonoBehaviour
         if (silueta != null) silueta.SetActive(false);
         for (int i = 0; i < luces.Length; i++) if (luces[i] != null) { luces[i].enabled = true; luces[i].intensity = intensidades[i] * 0.6f; }
         HorrorInput.Vibrar(0.7f, 0.5f, 0.4f, this);
+    }
+
+    // ================================================================== Entrada más clara
+
+    void EntradaVisible()
+    {
+        if (muro == null) return;
+        // Reflector cálido apuntando al muro, y una luz roja que parpadea sobre la marca (se ve desde lejos)
+        GameObject r = new GameObject("Reflector_Muro");
+        r.transform.position = muro.position + muro.forward * 7f + Vector3.up * 5f;
+        r.transform.LookAt(muro.position + Vector3.up * 1.5f);
+        Light lr = r.AddComponent<Light>(); lr.type = LightType.Spot; lr.spotAngle = 55f; lr.range = 20f; lr.intensity = 4f;
+        lr.color = new Color(1f, 0.85f, 0.6f); lr.shadows = LightShadows.None;
+        if (marca != null)
+        {
+            GameObject m = new GameObject("Baliza_Marca");
+            m.transform.position = marca.position + muro.forward * 1.2f + Vector3.up * 0.6f;
+            luzMarca = m.AddComponent<Light>(); luzMarca.type = LightType.Point; luzMarca.range = 12f; luzMarca.intensity = 3f;
+            luzMarca.color = new Color(1f, 0.15f, 0.1f); luzMarca.shadows = LightShadows.None;
+        }
+    }
+
+    Light luzMarca;
+
+    void LateUpdate()
+    {
+        if (luzMarca != null) luzMarca.intensity = Revelado ? 1.2f : (Mathf.Repeat(Time.time, 1.2f) < 0.6f ? 3.5f : 0.6f);
+    }
+
+    // ================================================================== Sustos dentro del túnel
+
+    bool sustosCorriendo;
+    static readonly System.Reflection.MethodInfo mostrar = typeof(EnemigoBase).GetMethod("Mostrar", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+    /// <summary>Mientras estés adentro, cada 15–25 s algo aparece al fondo y corre hacia ti. Escóndete o huye.</summary>
+    IEnumerator SustosTunel()
+    {
+        sustosCorriendo = true;
+        yield return new WaitForSeconds(8f);
+        while (JugadorDentro)
+        {
+            if (HorrorGameState.PuedeJugar && !DialogoUI.Activo) yield return Embestida();
+            yield return new WaitForSeconds(Random.Range(15f, 25f));
+        }
+        sustosCorriendo = false;
+    }
+
+    IEnumerator Embestida()
+    {
+        EnemigoBase[] todos = FindObjectsByType<EnemigoBase>(FindObjectsInactive.Include);
+        EnemigoBase e = null;
+        foreach (EnemigoBase x in todos) if (x != null && !x.MuertoParaSiempre && x.EstadoActual == EnemigoBase.Estado.Inactivo) { e = x; break; }
+        if (e == null) yield break;
+
+        // un punto lejos de ti (al fondo de las vías o al inicio del andén)
+        Vector3[] locales = { new Vector3(2.15f, 0f, 16f), new Vector3(2.15f, 0f, -18f), new Vector3(-2.75f, 1f, -18.5f), new Vector3(-2.75f, 1f, 4f) };
+        Vector3 desde = interior.TransformPoint(locales[0]); float mejor = 0f;
+        foreach (Vector3 l in locales)
+        {
+            Vector3 w = interior.TransformPoint(l);
+            float d = Vector3.Distance(w, jugador.position);
+            if (d > mejor) { mejor = d; desde = w; }
+        }
+
+        // las luces fallan
+        if (luces != null) foreach (Light l in luces) if (l != null) l.enabled = false;
+        fuente.transform.position = desde;
+        fuente.PlayOneShot(ProceduralAudio.Grito(Random.Range(1, 50)), 0.9f);
+        yield return new WaitForSeconds(0.6f);
+        if (luces != null) foreach (Light l in luces) if (l != null) l.enabled = true;
+
+        e.gameObject.SetActive(true);
+        e.enabled = false;
+        e.transform.position = desde;
+        mostrar?.Invoke(e, new object[] { true });
+        Animator a = e.GetComponentInChildren<Animator>();
+        if (a != null && a.HasState(0, Animator.StringToHash("Run"))) a.Play("Run", 0, 0f);
+        VHSOverlay.Glitch(0.5f, 0.4f);
+
+        PlayerEscondite esc = jugador.GetComponent<PlayerEscondite>();
+        float piso = desde.y;
+        for (float t = 0; t < 7f; t += Time.deltaTime)
+        {
+            Vector3 meta = jugador.position; meta.y = piso;
+            Vector3 dir = meta - e.transform.position; dir.y = 0;
+            if (dir.sqrMagnitude > 0.01f) e.transform.rotation = Quaternion.LookRotation(dir);
+            if (esc != null && esc.Escondido) { yield return new WaitForSeconds(1.5f); break; }      // te escondiste: se queda buscando y se va
+            if (dir.magnitude < 1.6f)
+            {
+                // te alcanzó
+                if (a != null && a.HasState(0, Animator.StringToHash("Attack"))) a.Play("Attack", 0, 0f);
+                VHSOverlay.Glitch(1f, 0.8f);
+                HorrorInput.Vibrar(1f, 1f, 0.5f, this);
+                fuente.transform.position = e.transform.position;
+                fuente.PlayOneShot(ProceduralAudio.Grito(Random.Range(50, 99)), 1f);
+                if (SaludJugador.Instancia != null) SaludJugador.Instancia.RecibirDanio(18f, e.transform.position);
+                yield return new WaitForSeconds(0.6f);
+                break;
+            }
+            // sube al andén / baja a las vías siguiendo tu altura
+            piso = Mathf.MoveTowards(piso, jugador.position.y, Time.deltaTime * 2f);
+            e.transform.position = Vector3.MoveTowards(e.transform.position, new Vector3(meta.x, piso, meta.z), 5.2f * Time.deltaTime);
+            yield return null;
+        }
+        VHSOverlay.Glitch(0.6f, 0.4f);
+        mostrar?.Invoke(e, new object[] { false });
+        e.enabled = true;
+        e.Reiniciar();
     }
 }

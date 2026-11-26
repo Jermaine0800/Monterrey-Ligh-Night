@@ -34,11 +34,12 @@ public class PlayerCombate : MonoBehaviour
         visualArma = visual;
         if (visual != null)
         {
+            // Empuñada en la mano DERECHA (la que golpea) y con arco de golpe propio
             Animator a = GetComponentInChildren<Animator>();
-            Transform mano = a != null && a.isHuman ? a.GetBoneTransform(HumanBodyBones.LeftHand) : null;
-            visual.transform.SetParent(mano != null ? mano : transform, true);
-            visual.transform.localPosition = mano != null ? new Vector3(0, 0.05f, 0.04f) : new Vector3(-0.35f, 1f, 0.3f);
-            visual.transform.localRotation = Quaternion.Euler(0, 0, 90f);
+            Transform mano = a != null && a.isHuman ? a.GetBoneTransform(HumanBodyBones.RightHand) : null;
+            visual.transform.SetParent(transform, true);
+            ArmaEnMano em = visual.AddComponent<ArmaEnMano>();
+            em.mano = mano; em.duenio = transform;
         }
         if (src != null) src.PlayOneShot(ProceduralAudio.ClicMenu(), 0.6f);
     }
@@ -142,6 +143,7 @@ public class PlayerCombate : MonoBehaviour
             }
             listo = Time.time + enfriamiento;
             if (tieneTrigger) animator.SetTrigger("Golpe");
+            if (visualArma != null && TieneArma) { ArmaEnMano em = visualArma.GetComponent<ArmaEnMano>(); if (em != null) em.Golpear(); }
             src.pitch = Random.Range(0.9f, 1.2f);
             src.PlayOneShot(zumbido, 0.3f);
             StartCoroutine(Impacto());
@@ -170,6 +172,8 @@ public class PlayerCombate : MonoBehaviour
         if (pego)
         {
             src.PlayOneShot(impacto, 1f);
+            SensacionJuego.Pausa(TieneArma ? 0.07f : 0.045f);
+            SensacionJuego.Sacudir(TieneArma ? 0.3f : 0.18f);
             HorrorInput.Vibrar(0.7f, 0.9f, 0.15f, this);
         }
     }

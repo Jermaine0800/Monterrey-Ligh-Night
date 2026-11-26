@@ -17,7 +17,7 @@ public class PlayerMovement : MonoBehaviour
     public float velocidadGiro = 10f;
 
     [Header("Aguante para correr")]
-    public float aguanteMaximo = 6f;     // segundos corriendo
+    public float aguanteMaximo = 16f;    // segundos corriendo
     public float recuperacion = 1.5f;    // por segundo
 
     [Header("Altura del cuerpo")]
@@ -62,6 +62,7 @@ public class PlayerMovement : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         animator = GetComponentInChildren<Animator>();
+        aguanteMaximo = Mathf.Max(aguanteMaximo, 16f); recuperacion = Mathf.Max(recuperacion, 2.4f);   // (la escena guardaba 6 s)
         aguante = aguanteMaximo;
         centroOriginalY = controller.center.y;
         alturaDePie = controller.height;

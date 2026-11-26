@@ -236,6 +236,7 @@ public abstract class EnemigoBase : Entidad, IReiniciable
     {
         ultimoSusto = Time.time;
         EstadoActual = Estado.Atacando;
+        SensacionJuego.Sacudir(0.85f);
         Camera cam = Camera.main;
 
         // Se pone en tu cara

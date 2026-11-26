@@ -26,36 +26,73 @@ public class SitioPanteon : SitioLlave
 
     public override string ObjetivoLlegar => "Llave 2: el panteón";
 
+    public bool CriptaAbierta { get; private set; }
+    int prendidasVistas;
+    bool abriendo;
+
+    // Funciona en cualquier orden: aunque todavía no te toque el panteón, si prendes las velas, pasa.
+    void Update()
+    {
+        if (velas == null || velas.Length == 0 || CriptaAbierta || abriendo) return;
+        int prendidas = 0;
+        foreach (VelaPanteon v in velas) if (v != null && v.Prendida) prendidas++;
+        if (prendidas != prendidasVistas)
+        {
+            prendidasVistas = prendidas;
+            Transform j = SaludJugador.Instancia != null ? SaludJugador.Instancia.transform : null;
+            if (j != null && prendidas == 1) Asomarse(j.position);                                   // algo te mira entre las cruces
+            if (j != null && prendidas == 2 && prendidas < velas.Length) SoltarMonstruo(j.position);  // y luego viene
+            DialogoUI.NuevoObjetivo(HorrorInput.Traducir("Prende las velas de las tumbas con calavera  (mantén [A])   " + prendidas + "/" + velas.Length));
+        }
+        if (prendidas >= velas.Length) { abriendo = true; StartCoroutine(AbrirCripta()); }
+    }
+
+    /// <summary>Pequeña cinemática: la cámara voltea a la cripta, la tierra tiembla y la reja se abre sola.</summary>
+    IEnumerator AbrirCripta()
+    {
+        yield return new WaitForSeconds(0.8f);
+        MisionManager mm = FindAnyObjectByType<MisionManager>();
+        Transform reja = rejaCripta != null ? rejaCripta.transform : transform;
+        Vector3 objetivo = reja.position + Vector3.up * 1.2f;
+        if (mm != null && Camera.main != null)
+        {
+            Vector3 cam = Camera.main.transform.position;
+            Vector3 hasta = objetivo + (cam - objetivo).normalized * 4.5f + Vector3.up * 0.6f;
+            StartCoroutine(AbrirDuranteToma());
+            yield return mm.Toma(cam + Vector3.up * 0.8f, hasta, objetivo, 4.2f, "LAS TRES VELAS", "la cripta se abre");
+        }
+        else
+        {
+            if (rejaCripta != null) rejaCripta.Abrir();
+        }
+        CriptaAbierta = true;
+        DialogoUI.Susurrar("", "La reja de la cripta... se abrió sola. Y algo más despertó.", 3.5f);
+        DialogoUI.NuevoObjetivo("Entra a la cripta y toma la llave");
+        // Los dos se activan: uno ya viene y el otro acecha
+        yield return new WaitForSeconds(2f);
+        Transform j = SaludJugador.Instancia != null ? SaludJugador.Instancia.transform : null;
+        if (j != null)
+        {
+            SoltarMonstruo(j.position);
+            if (AcechoDirector.Instancia != null) { AcechoDirector.Instancia.Habilitar(true); AcechoDirector.Instancia.ForzarAparicion(); }
+        }
+    }
+
+    IEnumerator AbrirDuranteToma()
+    {
+        yield return new WaitForSeconds(1.4f);
+        VHSOverlay.Glitch(0.9f, 0.9f);
+        HorrorInput.Vibrar(0.7f, 0.4f, 0.8f, this);
+        AudioSource.PlayClipAtPoint(ProceduralAudio.Rechinido(5), rejaCripta != null ? rejaCripta.transform.position : transform.position, 1f);
+        if (rejaCripta != null) rejaCripta.Abrir();
+    }
+
     protected override IEnumerator Reto(MisionManager h)
     {
         int total = velas != null ? velas.Length : 0;
-        string texto = "Prende las velas de las tumbas con calavera  (mantén [A])   ";
-        h.Objetivo(texto + "0/" + total);
-        int previas = 0;
-        while (true)
-        {
-            int prendidas = 0;
-            if (velas != null) foreach (VelaPanteon v in velas) if (v != null && v.Prendida) prendidas++;
-            if (prendidas != previas)
-            {
-                previas = prendidas;
-                h.Objetivo(texto + prendidas + "/" + total);
-                if (prendidas == 1) Asomarse(h.Jugador.position);                       // algo te mira entre las cruces
-                if (prendidas == 2 && prendidas < total) SoltarMonstruo(h.Jugador.position);   // y luego viene
-            }
-            if (prendidas >= total) break;
-            yield return null;
-        }
-
-        yield return new WaitForSeconds(0.8f);
-        VHSOverlay.Glitch(0.7f, 0.8f);
-        if (rejaCripta != null) rejaCripta.Abrir();
-        DialogoUI.Susurrar("", "La reja de la cripta... se abrió sola. Y algo más despertó.", 3.5f);
-        h.Objetivo("Entra a la cripta");
-        // Con las tres velas prendidas, los dos se activan: uno te alcanza en el panteón y el otro acecha después
-        yield return new WaitForSeconds(2.5f);
-        SoltarMonstruo(h.Jugador.position);
-        if (AcechoDirector.Instancia != null) { AcechoDirector.Instancia.Habilitar(true); AcechoDirector.Instancia.ForzarAparicion(); }
+        if (!CriptaAbierta) h.Objetivo("Prende las velas de las tumbas con calavera  (mantén [A])   " + prendidasVistas + "/" + total);
+        while (!CriptaAbierta && total > 0) yield return null;
+        h.Objetivo("Entra a la cripta y toma la llave");
     }
 
     /// <summary>Un monstruo se deja ver un momento entre las tumbas (no ataca).</summary>

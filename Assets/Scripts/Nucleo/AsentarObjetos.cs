@@ -17,6 +17,13 @@ public static class AsentarObjetos
             if (Asentar(mb.transform)) n++;
         }
         if (n > 0) Debug.Log("[Física] Objetos asentados sobre su superficie: " + n);
+
+        // Las casas de campaña tenían el choque del modelo completo (con la entrada "cerrada"): no se podía entrar.
+        int tiendas = 0;
+        foreach (MeshCollider mc in Object.FindObjectsByType<MeshCollider>(FindObjectsInactive.Exclude))
+            if (mc.gameObject.name.StartsWith("Tent") || (mc.transform.parent != null && mc.transform.parent.name.StartsWith("Tent")))
+            { Object.Destroy(mc); tiendas++; }
+        if (tiendas > 0) Debug.Log("[Física] Casas de campaña abiertas: " + tiendas);
     }
 
     static bool Asentar(Transform t)
@@ -40,6 +47,7 @@ public static class AsentarObjetos
         if (mejor == float.MaxValue) return false;
         float hueco = (b.min.y) - h.point.y;
         if (hueco < 0.08f) return false;              // ya está apoyado
+        if (hueco > 1.0f) return false;               // colgada en pared o tablero: se queda donde está
         t.position -= Vector3.up * (hueco - 0.01f);
         return true;
     }

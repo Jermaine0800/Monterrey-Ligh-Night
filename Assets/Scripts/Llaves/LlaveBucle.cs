@@ -68,6 +68,8 @@ public class LlaveBucle : MonoBehaviour, IInteractable
     IEnumerator Tomar()
     {
         Tomada = true;
+        if (AcechoDirector.Instancia != null) AcechoDirector.Instancia.SustoPorLlave();
+        SensacionJuego.Sacudir(0.35f);
         Mostrar(true);
         GetComponent<Collider>().enabled = false;
         AudioSource.PlayClipAtPoint(Campanita(), transform.position, 1f);
